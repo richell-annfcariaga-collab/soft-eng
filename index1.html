@@ -1,0 +1,3203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facility Reporting System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+                    colors: {
+                        primary: { DEFAULT: '#006A6A', light: '#4A9D9D', dark: '#004D4D', surface: '#E0F2F1' },
+                        secondary: { DEFAULT: '#4A6363', surface: '#CCE8E8' },
+                        surface: { DEFAULT: '#F0F7F7', 50: '#FAFEFE', 100: '#F0F7F7', 200: '#E0EEEE', 300: '#C8E2E2' },
+                        error: '#BA1A1A',
+                        success: '#006D31',
+                        warning: '#B36A00'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --teal-50: #E0F2F1;
+            --teal-100: #B2DFDB;
+            --teal-600: #006A6A;
+            --teal-800: #004D4D;
+            --radius-sm: 10px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-xl: 32px;
+            --shadow-sm: 0 1px 3px rgba(0,60,60,.07), 0 1px 2px rgba(0,60,60,.04);
+            --shadow-md: 0 4px 16px rgba(0,60,60,.08), 0 1px 4px rgba(0,60,60,.04);
+            --shadow-lg: 0 12px 40px rgba(0,60,60,.12), 0 2px 8px rgba(0,60,60,.06);
+            --shadow-xl: 0 24px 64px rgba(0,60,60,.15), 0 4px 16px rgba(0,60,60,.08);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #ECF3F3;
+            color: #0D1F1F;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #B2CECE; border-radius: 99px; }
+        ::-webkit-scrollbar-thumb:hover { background: #7AABAB; }
+
+        .view-section { display: none; animation: fadeUp .35s cubic-bezier(.2,0,0,1); padding: 2rem; max-width: 100%; }
+        .view-section.active { display: flex; }
+        @media(min-width:768px){ .view-section { padding: 2.5rem; } }
+        #view-admin-dashboard { padding: 0 !important; }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+        .glass-card {
+            background: rgba(255,255,255,.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,.9);
+            box-shadow: var(--shadow-md);
+        }
+
+        .mat-input-group { position: relative; margin-bottom: 1.25rem; }
+        .mat-input {
+            width: 100%;
+            padding: 15px 16px;
+            border: 1.5px solid #C8D8D8;
+            border-radius: var(--radius-sm);
+            background: #FAFEFE;
+            outline: none;
+            font-size: .9375rem;
+            font-family: inherit;
+            color: #0D1F1F;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .mat-input:focus {
+            border-color: #006A6A;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(0,106,106,.12);
+        }
+        .mat-label {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #FAFEFE;
+            padding: 0 5px;
+            color: #6B8E8E;
+            font-size: .875rem;
+            transition: all .18s;
+            pointer-events: none;
+            line-height: 1;
+        }
+        textarea + .mat-label { top: 18px; transform: none; }
+        .mat-input:focus + .mat-label,
+        .mat-input:not(:placeholder-shown) + .mat-label {
+            top: -1px;
+            transform: translateY(-50%);
+            font-size: .72rem;
+            color: #006A6A;
+            font-weight: 700;
+            letter-spacing: .03em;
+            background: #fff;
+        }
+        textarea.mat-input:focus + .mat-label,
+        textarea.mat-input:not(:placeholder-shown) + .mat-label {
+            top: -1px;
+            transform: translateY(-50%);
+        }
+
+        .mat-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23006A6A' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 1.1em;
+            padding-right: 2.5rem;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            background: linear-gradient(135deg, #006A6A, #004D4D);
+            color: #fff;
+            border: none;
+            border-radius: 99px;
+            padding: 11px 24px;
+            font-size: .9rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all .22s;
+            box-shadow: 0 2px 8px rgba(0,106,106,.35);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #007A7A, #005A5A);
+            box-shadow: 0 6px 20px rgba(0,106,106,.45);
+            transform: translateY(-1px);
+        }
+        .btn-outlined {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            border: 1.5px solid #C8D8D8;
+            color: #006A6A;
+            background: transparent;
+            border-radius: 99px;
+            padding: 10px 24px;
+            font-size: .9rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all .2s;
+        }
+        .btn-outlined:hover {
+            background: var(--teal-50);
+            border-color: #006A6A;
+        }
+
+        .stat-card {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            border: 1px solid #E8F0F0;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow .25s, transform .25s;
+        }
+        .stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: var(--radius-md);
+            font-size: .875rem;
+            font-weight: 500;
+            color: #4A6363;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            transition: all .18s;
+        }
+        .nav-item:hover { background: #F0F7F7; color: #0D1F1F; }
+        .nav-item i { font-size: 1.2rem; color: #7AABAB; flex-shrink: 0; transition: color .18s; }
+        .nav-item:hover i { color: #006A6A; }
+        .nav-item.active { background: linear-gradient(135deg, #E0F2F1, #C8E2E2); color: #004D4D; font-weight: 700; }
+        .nav-item.active i { color: #004D4D; }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 10px;
+            border-radius: 99px;
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .04em;
+        }
+        .badge-pending { background: #FFF3E0; color: #B36A00; }
+        .badge-progress { background: #E3F2FD; color: #1565C0; }
+        .badge-repaired { background: #E8F5E9; color: #006D31; }
+
+        .mat-table { width: 100%; border-collapse: collapse; }
+        .mat-table thead th {
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .07em;
+            color: #6B8E8E;
+            text-transform: uppercase;
+            padding: 12px 20px;
+            background: #F7FBFB;
+            white-space: nowrap;
+        }
+        .mat-table tbody tr { border-bottom: 1px solid #F0F5F5; transition: background .12s; }
+        .mat-table tbody tr:hover { background: #F7FBFB; }
+        .mat-table tbody td { padding: 14px 20px; font-size: .875rem; color: #2A4040; }
+
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .toast {
+            pointer-events: auto;
+            min-width: 300px;
+            max-width: 400px;
+            padding: 14px 18px;
+            border-radius: var(--radius-md);
+            background: #fff;
+            border-left: 4px solid;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideInToast .3s cubic-bezier(.2,0,.2,1) forwards;
+        }
+        .toast.success { border-left-color: #006D31; }
+        .toast.error { border-left-color: #BA1A1A; }
+        .toast i { font-size: 1.3rem; flex-shrink: 0; }
+        .toast.success i { color: #006D31; }
+        .toast.error i { color: #BA1A1A; }
+        .toast span { font-size: .875rem; font-weight: 500; color: #1A2E2E; line-height: 1.4; }
+        @keyframes slideInToast { from { transform: translateX(110%); opacity:0; } to { transform: translateX(0); opacity:1; } }
+
+        .strength-bar { height: 3px; border-radius: 99px; transition: width .35s, background-color .35s; }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 25, 25, .55);
+            backdrop-filter: blur(6px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9000;
+        }
+        .modal-overlay.flex { display: flex; }
+        .modal-box {
+            background: #fff;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
+            width: 100%;
+            overflow: hidden;
+            animation: modalIn .25s cubic-bezier(.2,0,.2,1);
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #006A6A, #004D4D);
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #fff;
+        }
+        .modal-header h3 { font-size: 1rem; font-weight: 700; }
+        .modal-close-btn {
+            width: 32px; height: 32px;
+            border-radius: 99px;
+            background: rgba(255,255,255,.15);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            transition: background .18s;
+        }
+        .modal-close-btn:hover { background: rgba(255,255,255,.28); }
+        @keyframes modalIn { from { transform: scale(.94) translateY(8px); opacity:0; } to { transform: scale(1) translateY(0); opacity:1; } }
+
+        .input-sm {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1.5px solid #C8D8D8;
+            border-radius: var(--radius-sm);
+            background: #F7FBFB;
+            font-size: .875rem;
+            font-family: inherit;
+            color: #0D1F1F;
+            outline: none;
+            transition: border-color .18s, box-shadow .18s;
+        }
+        .input-sm:focus { border-color: #006A6A; box-shadow: 0 0 0 3px rgba(0,106,106,.1); background: #fff; }
+
+        .label-sm { font-size: .72rem; font-weight: 700; color: #6B8E8E; text-transform: uppercase; letter-spacing: .06em; display: block; margin-bottom: 5px; }
+
+        .hero-gradient {
+            background: linear-gradient(160deg, #004D4D 0%, #006A6A 50%, #0A8080 100%);
+        }
+
+        .login-panel-bg {
+            background: #FAFEFE;
+            position: relative;
+        }
+
+        .feature-icon {
+            width: 48px; height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.4rem;
+        }
+
+        .page-header-bar {
+            background: rgba(250,254,254,.92);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid #E0EEEE;
+            height: 64px;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .sidebar-logo-wrap {
+            padding: 1.25rem 1.25rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .sidebar-logo-icon {
+            width: 40px; height: 40px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, #006A6A, #004D4D);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.25rem;
+            font-weight: 800;
+            box-shadow: 0 4px 12px rgba(0,106,106,.4);
+            flex-shrink: 0;
+        }
+
+        .report-status-card {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            border: 1px solid #E8F0F0;
+            padding: 1.25rem;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow .2s, transform .2s;
+        }
+        .report-status-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+
+        .dash-hero-card {
+            border-radius: var(--radius-xl);
+            padding: 1.75rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pending-req-card {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            border: 1.5px solid #FFE0B2;
+            padding: 1rem 1.25rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: box-shadow .2s;
+        }
+        .pending-req-card:hover { box-shadow: var(--shadow-md); }
+
+        .user-card {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            border: 1px solid #E8F0F0;
+            padding: 1rem 1.25rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            position: relative;
+            transition: box-shadow .2s, transform .2s;
+        }
+        .user-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+
+        .cluster-chart-wrap {
+            background: #fff;
+            border-radius: var(--radius-xl);
+            border: 1px solid #E8F0F0;
+            box-shadow: var(--shadow-sm);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            height: 42vh;
+            min-height: 320px;
+        }
+
+        .section-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #0D1F1F;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title i { font-size: 1.15rem; color: #006A6A; }
+
+        .chart-card {
+            background: #fff;
+            border-radius: var(--radius-xl);
+            border: 1px solid #E8F0F0;
+            box-shadow: var(--shadow-sm);
+            padding: 1.5rem;
+        }
+
+        .action-icon-btn {
+            width: 32px; height: 32px;
+            border-radius: 99px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            font-size: .875rem;
+            transition: all .18s;
+        }
+
+        .notification-dot {
+            position: absolute;
+            top: 8px; right: 8px;
+            width: 9px; height: 9px;
+            background: #BA1A1A;
+            border-radius: 99px;
+            border: 2px solid #FAFEFE;
+        }
+
+        .header-icon-btn {
+            width: 40px; height: 40px;
+            border-radius: 99px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4A6363;
+            transition: background .18s;
+            position: relative;
+        }
+        .header-icon-btn:hover { background: #F0F7F7; color: #006A6A; }
+
+        .dropdown-panel {
+            position: absolute;
+            right: 0;
+            top: calc(100% + 8px);
+            width: 280px;
+            background: #fff;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            border: 1px solid #E8F0F0;
+            display: none;
+            overflow: hidden;
+            z-index: 100;
+        }
+        .dropdown-panel.wide { width: 320px; }
+        .group:hover .dropdown-panel { display: block; }
+
+        .otp-input-field {
+            text-align: center;
+            font-size: 2rem;
+            letter-spacing: .4em;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .dot-pattern-bg {
+            background-color: #F0F7F7;
+            background-image: radial-gradient(#B2CECE 1px, transparent 1px);
+            background-size: 22px 22px;
+        }
+    </style>
+</head>
+<body class="antialiased h-screen flex overflow-hidden">
+
+<div id="toast-container"></div>
+
+<aside id="mainSidebar" class="hidden w-64 bg-white h-full border-r border-gray-100 flex-col z-20 shrink-0" style="box-shadow: 2px 0 20px rgba(0,60,60,.06);">
+    <div class="sidebar-logo-wrap border-b border-gray-50">
+        <div class="sidebar-logo-icon"><i class="material-icons-round" style="font-size:1.3rem;">dns</i></div>
+        <div>
+            <div style="font-size:.9rem;font-weight:800;color:#0D1F1F;line-height:1.1;">Facility</div>
+            <div style="font-size:.68rem;font-weight:600;color:#7AABAB;text-transform:uppercase;letter-spacing:.08em;">Reporting System</div>
+        </div>
+    </div>
+    <div style="padding: .75rem .875rem; flex:1; overflow-y:auto;">
+        <div id="sidebarRoleLabel" style="font-size:.65rem;font-weight:800;color:#A0BABA;text-transform:uppercase;letter-spacing:.1em;padding:4px 6px 8px;margin-bottom:4px;">Navigation</div>
+        <nav id="sidebarNav" class="flex flex-col gap-1"></nav>
+    </div>
+    <div style="padding:.875rem; border-top:1px solid #F0F5F5;">
+        <button id="logoutSidebarBtn" class="nav-item" style="color:#9B3333;">
+            <i class="material-icons-round" style="color:#BA1A1A;">logout</i>
+            Log Out
+        </button>
+    </div>
+</aside>
+
+<main class="flex-1 flex flex-col h-full relative overflow-hidden">
+
+    <header id="mainHeader" class="hidden page-header-bar">
+        <div class="flex items-center gap-3">
+            <h2 id="pageTitle" style="font-size:1.05rem;font-weight:700;color:#0D1F1F;">Dashboard</h2>
+        </div>
+        <div class="flex items-center gap-2">
+
+            <div id="bellWrap" class="relative group hidden">
+                <button class="header-icon-btn">
+                    <i class="material-icons-round" style="font-size:1.2rem;">notifications_none</i>
+                    <span id="bellDot" class="notification-dot hidden"></span>
+                </button>
+                <div id="bellMenu" class="dropdown-panel">
+                    <div style="padding:12px 16px 10px;font-size:.72rem;font-weight:800;color:#6B8E8E;text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid #F0F5F5;">Notifications</div>
+                    <div id="bellContent" style="max-height:260px;overflow-y:auto;"></div>
+                </div>
+            </div>
+
+            <div id="lockWrap" class="relative group hidden">
+                <button class="header-icon-btn">
+                    <i class="material-icons-round" style="font-size:1.2rem;">admin_panel_settings</i>
+                    <span id="lockDot" class="notification-dot hidden" style="background:#B36A00;"></span>
+                </button>
+                <div id="lockMenu" class="dropdown-panel wide">
+                    <div style="padding:12px 16px 10px;font-size:.72rem;font-weight:800;color:#6B8E8E;text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid #F0F5F5;">Pending Requests</div>
+                    <div id="lockContent" style="max-height:260px;overflow-y:auto;"></div>
+                </div>
+            </div>
+
+            <div style="width:1px;height:20px;background:#E0EEEE;margin:0 4px;"></div>
+
+            <div class="flex items-center gap-3">
+                <div style="text-align:right;" class="hidden md:block">
+                    <div id="headerUserName" style="font-size:.85rem;font-weight:700;color:#0D1F1F;line-height:1.2;">User</div>
+                    <div id="headerUserRole" style="font-size:.68rem;font-weight:600;color:#7AABAB;text-transform:uppercase;letter-spacing:.06em;">Role</div>
+                </div>
+                <div id="headerPhotoContainer" style="width:38px;height:38px;border-radius:99px;background:linear-gradient(135deg,#E0F2F1,#B2DFDB);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.9rem;color:#006A6A;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,106,106,.2);overflow:hidden;">
+                    <span id="headerUserInitials">U</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex-1 overflow-y-auto relative" id="contentScroll">
+
+        <section id="view-login" class="view-section active flex-col lg:flex-row min-h-screen overflow-hidden" style="padding:0 !important;">
+
+            <div class="w-full lg:w-[520px] shrink-0 h-full lg:h-screen overflow-y-auto login-panel-bg border-r border-gray-100 flex flex-col justify-center p-8 md:p-12 relative" style="box-shadow:4px 0 32px rgba(0,60,60,.08);">
+
+                <div class="w-full max-w-sm mx-auto relative z-10">
+
+                    <div style="margin-bottom:2.5rem;">
+                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;">
+                            <div class="sidebar-logo-icon" style="width:48px;height:48px;border-radius:14px;font-size:1.5rem;">
+                                <i class="material-icons-round">dns</i>
+                            </div>
+                            <div>
+                                <div style="font-size:1.6rem;font-weight:800;color:#0D1F1F;line-height:1.1;">Welcome Back</div>
+                                <div style="font-size:.875rem;color:#7AABAB;font-weight:500;margin-top:2px;">Sign in to your account</div>
+                            </div>
+                        </div>
+                        <div style="height:2px;width:48px;background:linear-gradient(90deg,#006A6A,#4A9D9D);border-radius:99px;margin-top:.5rem;"></div>
+                    </div>
+
+                    <form id="loginForm" onsubmit="handleLogin(event)">
+                        <div class="mat-input-group">
+                            <input type="text" id="loginIdno" name="idno" class="mat-input" placeholder=" " required>
+                            <label class="mat-label">ID Number</label>
+                        </div>
+                        <div class="mat-input-group">
+                            <input type="password" id="loginPassword" name="password" class="mat-input" placeholder=" " required>
+                            <label class="mat-label">Password</label>
+                        </div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;">
+                                <input type="checkbox" style="width:15px;height:15px;accent-color:#006A6A;border-radius:4px;">
+                                <span style="font-size:.825rem;color:#6B8E8E;font-weight:500;">Remember me</span>
+                            </label>
+                            <a href="#" onclick="navigateTo('forgot')" style="font-size:.825rem;color:#006A6A;font-weight:700;text-decoration:none;">Forgot password?</a>
+                        </div>
+                        
+                        <div id="loginError" style="display:none;margin-bottom:1rem;padding:12px 14px;background:#FFF0F0;border:1px solid #F5C2C2;border-radius:var(--radius-sm);align-items:center;gap:10px;font-size:.825rem;color:#BA1A1A;font-weight:500;">
+                            <i class="material-icons-round" style="font-size:1rem;">error_outline</i>
+                            <span>Invalid Credentials</span>
+                        </div>
+                        
+                        <button type="submit" class="btn-primary" style="width:100%;padding:14px 24px;font-size:1rem;border-radius:var(--radius-sm);">
+                            Sign In <i class="material-icons-round" style="font-size:1.1rem;">arrow_forward</i>
+                        </button>
+                    </form>
+
+                    <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid #E8F0F0;text-align:center;font-size:.825rem;color:#6B8E8E;">
+                        Don't have an account?
+                        <a href="#" onclick="navigateTo('signup')" style="color:#006A6A;font-weight:700;text-decoration:none;margin-left:4px;">Create Account</a>
+                    </div>
+                </div>
+
+                <div style="position:absolute;bottom:16px;left:0;width:100%;text-align:center;font-size:.72rem;color:#A0BABA;">&copy; 2026 Facility Reporting System</div>
+            </div>
+
+            <div class="hidden lg:flex flex-1 flex-col h-screen overflow-y-auto hero-gradient relative">
+
+                <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none;">
+                    <div style="position:absolute;width:600px;height:600px;border-radius:50%;background:rgba(255,255,255,.04);top:-200px;right:-200px;"></div>
+                    <div style="position:absolute;width:400px;height:400px;border-radius:50%;background:rgba(255,255,255,.04);bottom:-100px;left:-100px;"></div>
+                </div>
+
+                <div style="padding:2.5rem 3rem 0;flex-shrink:0;position:relative;z-index:1;">
+                    <h2 style="font-size:2rem;font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1.2;">ComLab Reporting<br>System</h2>
+                    <p style="color:rgba(255,255,255,.65);font-size:.9rem;font-weight:500;margin-top:.5rem;">Efficient · Smart · Reliable</p>
+                </div>
+
+                <div style="flex:1;padding:2.5rem 3rem 3rem;overflow-y:auto;display:flex;flex-direction:column;gap:2rem;position:relative;z-index:1;">
+
+                    <div style="background:rgba(255,255,255,.1);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.15);border-radius:var(--radius-xl);padding:2rem;">
+                        <h3 style="font-size:1.1rem;font-weight:800;color:#fff;margin-bottom:.875rem;display:flex;align-items:center;gap:8px;">
+                            <i class="material-icons-round" style="font-size:1.2rem;color:#7DDFCF;">flag</i> Our Purpose
+                        </h3>
+                        <p style="color:rgba(255,255,255,.78);line-height:1.75;font-size:.9rem;">To streamline the maintenance reporting process for computer laboratories, ensuring rapid response times, minimizing downtime, and providing data-driven insights for facility management. We aim to create a conducive learning environment by keeping all equipment in optimal condition.</p>
+                    </div>
+
+                    <div>
+                        <h3 style="font-size:1rem;font-weight:800;color:#fff;margin-bottom:1rem;">Key Features</h3>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                            <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius-lg);padding:1.25rem;">
+                                <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;margin-bottom:.75rem;"><i class="material-icons-round" style="color:#7DDFCF;">psychology</i></div>
+                                <div style="font-weight:700;color:#fff;font-size:.9rem;margin-bottom:.35rem;">AI Powered</div>
+                                <div style="color:rgba(255,255,255,.6);font-size:.8rem;line-height:1.6;">Intelligent clustering and automated facility health analysis.</div>
+                            </div>
+                            <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius-lg);padding:1.25rem;">
+                                <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;margin-bottom:.75rem;"><i class="material-icons-round" style="color:#FFD580;">speed</i></div>
+                                <div style="font-weight:700;color:#fff;font-size:.9rem;margin-bottom:.35rem;">Real-time Updates</div>
+                                <div style="color:rgba(255,255,255,.6);font-size:.8rem;line-height:1.6;">Live tracking from submission to resolution.</div>
+                            </div>
+                            <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius-lg);padding:1.25rem;">
+                                <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;margin-bottom:.75rem;"><i class="material-icons-round" style="color:#FFA0B4;">insert_chart</i></div>
+                                <div style="font-weight:700;color:#fff;font-size:.9rem;margin-bottom:.35rem;">Smart Analytics</div>
+                                <div style="color:rgba(255,255,255,.6);font-size:.8rem;line-height:1.6;">Visual insights to identify trends and problem areas.</div>
+                            </div>
+                            <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius-lg);padding:1.25rem;">
+                                <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;margin-bottom:.75rem;"><i class="material-icons-round" style="color:#90EE90;">admin_panel_settings</i></div>
+                                <div style="font-weight:700;color:#fff;font-size:.9rem;margin-bottom:.35rem;">Secure Access</div>
+                                <div style="color:rgba(255,255,255,.6);font-size:.8rem;line-height:1.6;">Role-based authentication ensures data integrity.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 style="font-size:1rem;font-weight:800;color:#fff;margin-bottom:1rem;">Meet the Developers</h3>
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.875rem;">
+                            <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius-lg);padding:1.25rem;text-align:center;">
+                                <img src="https://ui-avatars.com/api/?name=Brave+Garay&background=006A6A&color=fff&size=80" style="width:56px;height:56px;border-radius:99px;margin:0 auto .75rem;border:2px solid rgba(255,255,255,.25);">
+                                <div style="font-weight:700;color:#fff;font-size:.8rem;line-height:1.3;">Brave Jerome D. Garay</div>
+                                <div style="font-size:.68rem;color:#7DDFCF;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-top:.25rem;">Lead Developer</div>
+                            </div>
+                            <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius-lg);padding:1.25rem;text-align:center;">
+                                <img src="https://ui-avatars.com/api/?name=Richell+Cariaga&background=EA9C10&color=fff&size=80" style="width:56px;height:56px;border-radius:99px;margin:0 auto .75rem;border:2px solid rgba(255,255,255,.25);">
+                                <div style="font-weight:700;color:#fff;font-size:.8rem;line-height:1.3;">Richell-Ann F. Cariaga</div>
+                                <div style="font-size:.68rem;color:#FFD580;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-top:.25rem;">Designer</div>
+                            </div>
+                            <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius-lg);padding:1.25rem;text-align:center;">
+                                <img src="https://ui-avatars.com/api/?name=Ardel+Mangadap&background=006D31&color=fff&size=80" style="width:56px;height:56px;border-radius:99px;margin:0 auto .75rem;border:2px solid rgba(255,255,255,.25);">
+                                <div style="font-weight:700;color:#fff;font-size:.8rem;line-height:1.3;">Ardel John Mangadap</div>
+                                <div style="font-size:.68rem;color:#90EE90;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-top:.25rem;">Tester</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-xl);padding:1.75rem;">
+                        <h3 style="font-size:.9rem;font-weight:800;color:#fff;margin-bottom:1.25rem;display:flex;align-items:center;gap:8px;"><i class="material-icons-round" style="color:#7DDFCF;font-size:1.1rem;">contact_support</i> Contact Us</h3>
+                        <div style="display:flex;flex-direction:column;gap:.875rem;">
+                            <div style="display:flex;align-items:center;gap:12px;color:rgba(255,255,255,.7);font-size:.82rem;"><i class="material-icons-round" style="color:#7DDFCF;font-size:1rem;">email</i> facilitydamagereportingsystemm@gmail.com</div>
+                            <div style="display:flex;align-items:center;gap:12px;color:rgba(255,255,255,.7);font-size:.82rem;"><i class="material-icons-round" style="color:#7DDFCF;font-size:1rem;">phone</i> +63 993 099 5437</div>
+                            <div style="display:flex;align-items:center;gap:12px;color:rgba(255,255,255,.7);font-size:.82rem;"><i class="material-icons-round" style="color:#7DDFCF;font-size:1rem;">location_on</i> ISU Campus, College of Computing Studies</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-signup" class="view-section flex-col items-center justify-center min-h-full py-10">
+            <div class="w-full max-w-2xl glass-card" style="border-radius:var(--radius-xl);padding:2.5rem;">
+                <button onclick="navigateTo('login')" style="display:flex;align-items:center;gap:6px;font-size:.825rem;color:#6B8E8E;font-weight:600;background:none;border:none;cursor:pointer;margin-bottom:1.5rem;padding:8px 12px;border-radius:var(--radius-sm);transition:background .18s;" onmouseover="this.style.background='#F0F7F7'" onmouseout="this.style.background='none'">
+                    <i class="material-icons-round" style="font-size:1rem;">arrow_back</i> Back to Login
+                </button>
+                <div style="margin-bottom:1.75rem;">
+                    <h2 style="font-size:1.5rem;font-weight:800;color:#0D1F1F;">Create Account</h2>
+                    <p style="font-size:.875rem;color:#6B8E8E;margin-top:.25rem;">Fill in your details to request access.</p>
+                </div>
+                <form id="signupForm" class="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-0" onsubmit="handleSignup(event)">
+
+                    <div style="grid-column:1/-1;display:flex;flex-direction:column;align-items:center;gap:.875rem;margin-bottom:1.5rem;padding:1.5rem;background:#F7FBFB;border-radius:var(--radius-lg);border:1.5px dashed #C8D8D8;">
+                        <div style="position:relative;width:96px;height:96px;border-radius:50%;background:#E8F0F0;overflow:hidden;display:flex;align-items:center;justify-content:center;border:3px solid #fff;box-shadow:0 4px 12px rgba(0,60,60,.12);">
+                            <img id="photoPreview" style="width:100%;height:100%;object-fit:cover;display:none;">
+                            <video id="cameraPreview" style="width:100%;height:100%;object-fit:cover;display:none;" autoplay playsinline></video>
+                            <canvas id="cameraCanvas" style="display:none;"></canvas>
+                            <i class="material-icons-round" id="photoPlaceholder" style="font-size:2.5rem;color:#A0BABA;">person</i>
+                        </div>
+                        <div style="display:flex;gap:.75rem;">
+                            <input type="file" id="signupPhoto" name="photo" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
+                            <button type="button" onclick="document.getElementById('signupPhoto').click()" class="btn-outlined" style="padding:8px 18px;font-size:.8rem;">Upload Photo</button>
+                            <button type="button" id="captureBtn" class="btn-primary" style="padding:8px 18px;font-size:.8rem;" onclick="handleCamera()">
+                                <i class="material-icons-round" style="font-size:.9rem;">camera_alt</i> Capture
+                            </button>
+                        </div>
+                        <div style="font-size:.72rem;color:#A0BABA;text-align:center;">Must be a clear face photo for identification.</div>
+                    </div>
+
+                    <div class="mat-input-group">
+                        <input type="text" name="first_name" class="mat-input" placeholder=" " required>
+                        <label class="mat-label">First Name</label>
+                    </div>
+                    <div class="mat-input-group">
+                        <input type="text" name="last_name" class="mat-input" placeholder=" " required>
+                        <label class="mat-label">Last Name</label>
+                    </div>
+                    <div class="mat-input-group" style="grid-column:1/-1;">
+                        <input type="email" name="email" class="mat-input" placeholder=" " required>
+                        <label class="mat-label">Email Address (@isu.edu.ph)</label>
+                    </div>
+                    <div class="mat-input-group">
+                        <input type="text" name="idno" class="mat-input" placeholder=" " required>
+                        <label class="mat-label">ID Number</label>
+                    </div>
+                    <div class="mat-input-group">
+                        <select name="course" id="signupCourse" class="mat-input mat-select" required>
+                            <option value="" disabled selected></option>
+                        </select>
+                        <label class="mat-label">Course / Major</label>
+                    </div>
+                    <div class="mat-input-group" style="grid-column:1/-1;">
+                        <input type="text" name="cp" class="mat-input" placeholder=" ">
+                        <label class="mat-label">Contact Number</label>
+                    </div>
+                    <div style="grid-column:1/-1;">
+                        <div class="mat-input-group" style="margin-bottom:0;">
+                            <input type="password" id="signupPass" name="password" class="mat-input" placeholder=" " required oninput="checkPasswordStrength(this.value)">
+                            <label class="mat-label">Password</label>
+                        </div>
+                        <div style="margin-top:8px;height:3px;background:#E8F0F0;border-radius:99px;overflow:hidden;">
+                            <div id="strengthBar" style="width:0%;height:100%;border-radius:99px;transition:all .35s;"></div>
+                        </div>
+                        <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.25rem;" id="passCriteria">
+                            <span id="crit-len" style="font-size:.72rem;color:#A0BABA;font-weight:600;">8+ chars</span>
+                            <span id="crit-upper" style="font-size:.72rem;color:#A0BABA;font-weight:600;">Uppercase</span>
+                            <span id="crit-lower" style="font-size:.72rem;color:#A0BABA;font-weight:600;">Lowercase</span>
+                            <span id="crit-num" style="font-size:.72rem;color:#A0BABA;font-weight:600;">Number</span>
+                        </div>
+                    </div>
+                    <div class="mat-input-group" style="grid-column:1/-1;">
+                        <input type="password" name="confirmPassword" class="mat-input" placeholder=" " required>
+                        <label class="mat-label">Confirm Password</label>
+                    </div>
+                    <div id="signupFeedback" style="grid-column:1/-1;text-align:center;font-size:.85rem;margin-bottom:.5rem;display:none;"></div>
+                    <div style="grid-column:1/-1;margin-top:.5rem;">
+                        <button type="submit" class="btn-primary" style="width:100%;padding:14px;font-size:.975rem;border-radius:var(--radius-sm);">Create Account</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section id="view-forgot" class="view-section flex-col items-center justify-center min-h-full">
+            <div class="w-full max-w-md glass-card" style="border-radius:var(--radius-xl);padding:2.5rem;">
+                <button onclick="navigateTo('login')" style="display:flex;align-items:center;gap:6px;font-size:.825rem;color:#6B8E8E;font-weight:600;background:none;border:none;cursor:pointer;margin-bottom:1.5rem;padding:8px 12px;border-radius:var(--radius-sm);transition:background .18s;" onmouseover="this.style.background='#F0F7F7'" onmouseout="this.style.background='none'">
+                    <i class="material-icons-round" style="font-size:1rem;">arrow_back</i> Back to Login
+                </button>
+                <h2 style="font-size:1.4rem;font-weight:800;color:#0D1F1F;margin-bottom:.25rem;">Reset Password</h2>
+                <p style="font-size:.85rem;color:#6B8E8E;margin-bottom:1.75rem;">Enter your details to request a password reset.</p>
+                <form id="forgotForm" onsubmit="handleForgot(event)">
+                    <div class="mat-input-group">
+                        <input name="idno" class="mat-input" placeholder=" " required>
+                        <label class="mat-label">ID Number</label>
+                    </div>
+                    <div class="mat-input-group">
+                        <input type="password" name="newPassword" class="mat-input" placeholder=" " required oninput="checkPasswordStrength(this.value, 'f-')">
+                        <label class="mat-label">New Password</label>
+                        <div style="margin-top:8px;height:3px;background:#E8F0F0;border-radius:99px;overflow:hidden;">
+                            <div id="f-strengthBar" style="width:0%;height:100%;border-radius:99px;transition:all .35s;"></div>
+                        </div>
+                        <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;">
+                            <span id="f-crit-len" style="font-size:.72rem;color:#A0BABA;font-weight:600;">8+ chars</span>
+                            <span id="f-crit-upper" style="font-size:.72rem;color:#A0BABA;font-weight:600;">Uppercase</span>
+                            <span id="f-crit-lower" style="font-size:.72rem;color:#A0BABA;font-weight:600;">Lowercase</span>
+                            <span id="f-crit-num" style="font-size:.72rem;color:#A0BABA;font-weight:600;">Number</span>
+                        </div>
+                    </div>
+                    <div class="mat-input-group">
+                        <input type="password" name="confirmPassword" class="mat-input" placeholder=" " required>
+                        <label class="mat-label">Confirm New Password</label>
+                    </div>
+                    <div id="forgotFeedback" style="display:none;margin-bottom:1rem;font-size:.85rem;text-align:center;font-weight:600;"></div>
+                    <button type="submit" class="btn-primary" style="width:100%;padding:14px;font-size:.975rem;border-radius:var(--radius-sm);">Submit Request</button>
+                </form>
+            </div>
+        </section>
+
+        <section id="view-admin-dashboard" class="view-section flex-col gap-0 relative">
+
+            <div style="position:sticky;top:0;z-index:40;background:#ECF3F3;padding:1.75rem 2rem 1.25rem;border-bottom:1px solid #E0EEEE;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:1.25rem;">
+                    <i class="material-icons-round" style="color:#006A6A;font-size:1.15rem;">analytics</i>
+                    <span style="font-size:1rem;font-weight:800;color:#0D1F1F;">Room Risk Analysis</span>
+                </div>
+                <div class="cluster-chart-wrap">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;flex-shrink:0;">
+                        <div>
+                            <div style="font-size:.95rem;font-weight:700;color:#0D1F1F;">Clustering of Room Risks</div>
+                            <div style="font-size:.72rem;color:#6B8E8E;margin-top:2px;">Based on Pending Reports count and Average Pending Days.</div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:12px;font-size:.72rem;font-weight:700;">
+                            <div style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:99px;background:#006D31;display:block;"></span><span style="color:#4A6363;">Healthy</span></div>
+                            <div style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:99px;background:#B36A00;display:block;"></span><span style="color:#4A6363;">Warning</span></div>
+                            <div style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:99px;background:#BA1A1A;display:block;"></span><span style="color:#4A6363;">Critical</span></div>
+                        </div>
+                    </div>
+                    <div style="position:relative;flex:1;min-height:0;">
+                        <canvas id="aiClusterChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div style="padding:1.75rem 2rem 3rem;display:flex;flex-direction:column;gap:1.5rem;">
+
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;">
+                    <div class="stat-card">
+                        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.75rem;">
+                            <div style="font-size:.7rem;font-weight:800;color:#7AABAB;text-transform:uppercase;letter-spacing:.08em;">Total Reports</div>
+                            <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#E0F2F1,#B2DFDB);display:flex;align-items:center;justify-content:center;"><i class="material-icons-round" style="font-size:1.1rem;color:#006A6A;">assignment</i></div>
+                        </div>
+                        <div id="statTotalReports" style="font-size:2.25rem;font-weight:800;color:#0D1F1F;line-height:1;">0</div>
+                        <div style="margin-top:.75rem;font-size:.72rem;color:#7AABAB;font-weight:500;display:flex;align-items:center;gap:4px;"><i class="material-icons-round" style="font-size:.875rem;">update</i> Updated just now</div>
+                    </div>
+                    <div class="stat-card">
+                        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.75rem;">
+                            <div style="font-size:.7rem;font-weight:800;color:#B36A00;text-transform:uppercase;letter-spacing:.08em;">Pending</div>
+                            <div style="width:36px;height:36px;border-radius:10px;background:#FFF3E0;display:flex;align-items:center;justify-content:center;"><i class="material-icons-round" style="font-size:1.1rem;color:#B36A00;">pending_actions</i></div>
+                        </div>
+                        <div id="statPending" style="font-size:2.25rem;font-weight:800;color:#B36A00;line-height:1;">0</div>
+                        <div style="margin-top:.75rem;font-size:.72rem;color:#A0BABA;font-weight:500;">Requires attention</div>
+                    </div>
+                    <div class="stat-card">
+                        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.75rem;">
+                            <div style="font-size:.7rem;font-weight:800;color:#006D31;text-transform:uppercase;letter-spacing:.08em;">Resolved</div>
+                            <div style="width:36px;height:36px;border-radius:10px;background:#E8F5E9;display:flex;align-items:center;justify-content:center;"><i class="material-icons-round" style="font-size:1.1rem;color:#006D31;">check_circle</i></div>
+                        </div>
+                        <div id="statResolved" style="font-size:2.25rem;font-weight:800;color:#006D31;line-height:1;">0</div>
+                        <div style="margin-top:.75rem;font-size:.72rem;color:#A0BABA;font-weight:500;">Archived reports</div>
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;">
+                    <div class="chart-card">
+                        <div class="section-title" style="margin-bottom:1.25rem;"><i class="material-icons-round">donut_small</i> Report Status</div>
+                        <div style="display:flex;align-items:center;gap:1.5rem;">
+                            <div style="width:160px;height:160px;flex-shrink:0;position:relative;">
+                                <canvas id="statusChart"></canvas>
+                            </div>
+                            <div id="statusLegend" style="flex:1;display:flex;flex-direction:column;gap:0;"></div>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="section-title" style="margin-bottom:1.25rem;"><i class="material-icons-round">category</i> Issue Categories</div>
+                        <div style="display:flex;align-items:center;gap:1.5rem;">
+                            <div style="width:160px;height:160px;flex-shrink:0;position:relative;">
+                                <canvas id="typeChart"></canvas>
+                            </div>
+                            <div id="typeLegend" style="flex:1;display:flex;flex-direction:column;gap:0;"></div>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="section-title" style="margin-bottom:1rem;"><i class="material-icons-round">meeting_room</i> Top 5 Problematic Rooms</div>
+                        <div style="height:220px;"><canvas id="roomChart"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="section-title" style="margin-bottom:1rem;"><i class="material-icons-round">people</i> Top 5 Active Reporters</div>
+                        <div style="height:220px;"><canvas id="reporterChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-admin-reports" class="view-section flex-col lg:flex-row gap-6 items-start">
+
+            <div style="width:100%;max-width:272px;flex-shrink:0;display:flex;flex-direction:column;gap:1rem;">
+                <div class="glass-card" style="border-radius:var(--radius-xl);padding:1.5rem;">
+                    <div style="font-size:.72rem;font-weight:800;color:#7AABAB;text-transform:uppercase;letter-spacing:.08em;margin-bottom:1.25rem;">Report Summary</div>
+                    <div style="margin-bottom:1.25rem;">
+                        <div style="font-size:.75rem;color:#A0BABA;font-weight:600;">Total Reports</div>
+                        <div id="repSideTotal" style="font-size:2.5rem;font-weight:800;color:#0D1F1F;line-height:1.1;margin-top:.25rem;">0</div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:.625rem;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#FFF3E0;border-radius:var(--radius-sm);border:1px solid #FFE0B2;">
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <span style="width:8px;height:8px;border-radius:99px;background:#B36A00;display:block;"></span>
+                                <span style="font-size:.8rem;font-weight:700;color:#7A4700;">Pending</span>
+                            </div>
+                            <span id="repSidePending" style="font-weight:800;color:#0D1F1F;font-size:.9rem;">0</span>
+                        </div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#E3F2FD;border-radius:var(--radius-sm);border:1px solid #BBDEFB;">
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <span style="width:8px;height:8px;border-radius:99px;background:#1565C0;display:block;"></span>
+                                <span style="font-size:.8rem;font-weight:700;color:#0D47A1;">In Progress</span>
+                            </div>
+                            <span id="repSideProgress" style="font-weight:800;color:#0D1F1F;font-size:.9rem;">0</span>
+                        </div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#E8F5E9;border-radius:var(--radius-sm);border:1px solid #C8E6C9;">
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <span style="width:8px;height:8px;border-radius:99px;background:#006D31;display:block;"></span>
+                                <span style="font-size:.8rem;font-weight:700;color:#1B5E20;">Repaired</span>
+                            </div>
+                            <span id="repSideRepaired" style="font-weight:800;color:#0D1F1F;font-size:.9rem;">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="background:linear-gradient(135deg,#E0F2F1,#B2DFDB);border-radius:var(--radius-xl);padding:1.25rem;border:1px solid rgba(0,106,106,.15);">
+                    <div style="font-weight:800;color:#004D4D;margin-bottom:.25rem;font-size:.9rem;">Export Data</div>
+                    <div style="font-size:.75rem;color:#4A7A7A;margin-bottom:1rem;">Download the current filtered report history.</div>
+                    <button id="exportPdfBtn" class="btn-primary" style="width:100%;font-size:.8rem;padding:10px;border-radius:var(--radius-sm);">
+                        <i class="material-icons-round" style="font-size:.9rem;">picture_as_pdf</i> Download PDF
+                    </button>
+                </div>
+            </div>
+
+            <div style="flex:1;width:100%;background:#fff;border-radius:var(--radius-xl);border:1px solid #E8F0F0;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;height:80vh;">
+                <div style="padding:1.25rem 1.5rem;border-bottom:1px solid #F0F5F5;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+                    <div>
+                        <div style="font-size:1rem;font-weight:700;color:#0D1F1F;">Reports Log</div>
+                        <div style="font-size:.78rem;color:#7AABAB;margin-top:2px;">Manage and update facility issues</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;">
+                        <div style="display:flex;align-items:center;gap:8px;background:#F7FBFB;padding:8px 12px;border-radius:var(--radius-sm);border:1.5px solid #E0EEEE;">
+                            <span style="font-size:.68rem;font-weight:800;color:#7AABAB;text-transform:uppercase;letter-spacing:.06em;">Filter:</span>
+                            <input type="date" id="filterStartDate" onchange="updateTable()" style="background:transparent;font-size:.8rem;color:#2A4040;outline:none;cursor:pointer;font-family:inherit;">
+                            <span style="color:#C8D8D8;font-size:.8rem;">—</span>
+                            <input type="date" id="filterEndDate" onchange="updateTable()" style="background:transparent;font-size:.8rem;color:#2A4040;outline:none;cursor:pointer;font-family:inherit;">
+                        </div>
+                        <div style="position:relative;">
+                            <input type="text" id="adminSearch" placeholder="Search user, room..." style="padding:9px 14px 9px 36px;border-radius:99px;background:#F7FBFB;border:1.5px solid #E0EEEE;font-size:.825rem;width:220px;outline:none;font-family:inherit;color:#2A4040;transition:border-color .18s,box-shadow .18s;" onfocus="this.style.borderColor='#006A6A';this.style.boxShadow='0 0 0 3px rgba(0,106,106,.1)'" onblur="this.style.borderColor='#E0EEEE';this.style.boxShadow='none'">
+                            <i class="material-icons-round" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:.9rem;color:#A0BABA;pointer-events:none;">search</i>
+                        </div>
+                    </div>
+                </div>
+                <div style="flex:1;overflow:auto;">
+                    <table class="mat-table">
+                        <thead>
+                            <tr>
+                                <th style="text-align:center;width:44px;">#</th>
+                                <th onclick="sortReports('created_at')" style="cursor:pointer;" class="group">
+                                    <div style="display:flex;align-items:center;gap:4px;">DATE <i id="sortIcon-created_at" class="material-icons-round" style="font-size:1rem;color:#C8D8D8;">arrow_drop_down</i></div>
+                                </th>
+                                <th onclick="sortReports('user')" style="cursor:pointer;">
+                                    <div style="display:flex;align-items:center;gap:4px;">REPORTER <i id="sortIcon-user" class="material-icons-round" style="font-size:1rem;color:#C8D8D8;">arrow_drop_down</i></div>
+                                </th>
+                                <th onclick="sortReports('location')" style="cursor:pointer;">
+                                    <div style="display:flex;align-items:center;gap:4px;">LOCATION <i id="sortIcon-location" class="material-icons-round" style="font-size:1rem;color:#C8D8D8;">arrow_drop_down</i></div>
+                                </th>
+                                <th>DESCRIPTION</th>
+                                <th onclick="sortReports('status')" style="cursor:pointer;">
+                                    <div style="display:flex;align-items:center;gap:4px;">STATUS <i id="sortIcon-status" class="material-icons-round" style="font-size:1rem;color:#C8D8D8;">arrow_drop_down</i></div>
+                                </th>
+                                <th>ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminReportsTable"></tbody>
+                    </table>
+                    <div id="adminEmptyState" style="display:none;flex-direction:column;align-items:center;justify-content:center;padding:4rem 0;color:#A0BABA;">
+                        <i class="material-icons-round" style="font-size:3rem;margin-bottom:.75rem;">inbox</i>
+                        <div style="font-size:.9rem;font-weight:600;">No reports found</div>
+                    </div>
+                </div>
+                <div style="padding:12px 20px;border-top:1px solid #F0F5F5;display:flex;align-items:center;justify-content:space-between;background:#FAFEFE;border-radius:0 0 var(--radius-xl) var(--radius-xl);">
+                    <span id="paginationInfo" style="font-size:.75rem;font-weight:600;color:#7AABAB;">Showing 0-0 of 0</span>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <button onclick="changePage(-1)" id="btnPrev" style="width:30px;height:30px;border-radius:var(--radius-sm);border:1.5px solid #E0EEEE;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#4A6363;transition:all .18s;" onmouseover="this.style.background='#F0F7F7'" onmouseout="this.style.background='#fff'">
+                            <i class="material-icons-round" style="font-size:1rem;">chevron_left</i>
+                        </button>
+                        <span id="pageIndicator" style="font-size:.75rem;font-weight:800;color:#006A6A;background:#E0F2F1;padding:4px 10px;border-radius:6px;">1</span>
+                        <button onclick="changePage(1)" id="btnNext" style="width:30px;height:30px;border-radius:var(--radius-sm);border:1.5px solid #E0EEEE;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#4A6363;transition:all .18s;" onmouseover="this.style.background='#F0F7F7'" onmouseout="this.style.background='#fff'">
+                            <i class="material-icons-round" style="font-size:1rem;">chevron_right</i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-admin-rooms" class="view-section flex-col gap-6">
+            <div class="glass-card" style="border-radius:var(--radius-xl);padding:2rem;max-width:640px;width:100%;margin:0 auto;">
+                <div style="margin-bottom:1.75rem;">
+                    <h2 style="font-size:1.4rem;font-weight:800;color:#0D1F1F;">Room Management</h2>
+                    <p style="font-size:.825rem;color:#7AABAB;margin-top:.25rem;">Add, edit, or remove rooms from the system.</p>
+                </div>
+                <form id="addRoomForm" style="display:flex;gap:.75rem;margin-bottom:1.5rem;align-items:flex-end;">
+                    <div class="mat-input-group" style="flex:1;margin-bottom:0;">
+                        <input type="text" id="newRoomName" class="mat-input" placeholder=" " required>
+                        <label class="mat-label">New Room Name</label>
+                    </div>
+                    <button type="submit" class="btn-primary" style="height:51px;padding:0 24px;border-radius:var(--radius-sm);flex-shrink:0;">Add Room</button>
+                </form>
+                <div style="display:flex;flex-direction:column;gap:.625rem;" id="roomListContainer"></div>
+            </div>
+        </section>
+
+        <section id="view-admin-courses" class="view-section flex-col gap-6">
+            <div class="glass-card" style="border-radius:var(--radius-xl);padding:2rem;max-width:720px;width:100%;margin:0 auto;">
+                <div style="margin-bottom:1.75rem;">
+                    <h2 style="font-size:1.4rem;font-weight:800;color:#0D1F1F;">Course Management</h2>
+                    <p style="font-size:.825rem;color:#7AABAB;margin-top:.25rem;">Manage available course abbreviations and full names.</p>
+                </div>
+                <form id="addCourseForm" onsubmit="handleAddCourse(event)" style="display:flex;gap:.75rem;margin-bottom:1.5rem;align-items:flex-end;flex-wrap:wrap;">
+                    <div class="mat-input-group" style="width:120px;flex-shrink:0;margin-bottom:0;">
+                        <input type="text" name="abbreviation" class="mat-input" placeholder=" " required>
+                        <label class="mat-label">Abbrev</label>
+                    </div>
+                    <div class="mat-input-group" style="flex:1;min-width:200px;margin-bottom:0;">
+                        <input type="text" name="full_name" class="mat-input" placeholder=" " required>
+                        <label class="mat-label">Full Course Name</label>
+                    </div>
+                    <button type="submit" class="btn-primary" style="height:51px;padding:0 24px;border-radius:var(--radius-sm);flex-shrink:0;">Add</button>
+                </form>
+                <div style="display:flex;flex-direction:column;gap:.625rem;" id="courseListContainer"></div>
+            </div>
+        </section>
+
+        <section id="view-admin-backup" class="view-section flex-col gap-6">
+            <div class="glass-card" style="border-radius:var(--radius-xl);padding:2rem;max-width:800px;width:100%;margin:0 auto;">
+                <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.75rem;padding-bottom:1.5rem;border-bottom:1px solid #F0F5F5;">
+                    <div style="width:48px;height:48px;border-radius:var(--radius-md);background:linear-gradient(135deg,#E0F2F1,#B2DFDB);display:flex;align-items:center;justify-content:center;">
+                        <i class="material-icons-round" style="color:#006A6A;font-size:1.4rem;">settings_backup_restore</i>
+                    </div>
+                    <div>
+                        <h2 style="font-size:1.4rem;font-weight:800;color:#0D1F1F;">Backup & Recovery</h2>
+                        <p style="font-size:.825rem;color:#7AABAB;margin-top:.15rem;">Manage system data safety and restoration.</p>
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;">
+                    <div style="padding:1.5rem;border-radius:var(--radius-lg);border:1px solid #E0EEEE;background:#FAFEFE;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.boxShadow='none'">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:.75rem;">
+                            <i class="material-icons-round" style="color:#006A6A;font-size:1.15rem;">cloud_download</i>
+                            <span style="font-weight:800;color:#0D1F1F;font-size:.95rem;">Create Backup</span>
+                        </div>
+                        <p style="font-size:.8rem;color:#6B8E8E;margin-bottom:1.25rem;line-height:1.6;min-height:60px;">Download a complete snapshot of the database and all uploaded photos as a ZIP file.</p>
+                        <button onclick="downloadBackup()" id="btnDownloadBackup" class="btn-primary" style="width:100%;font-size:.85rem;border-radius:var(--radius-sm);">Download System Backup</button>
+                    </div>
+                    <div style="padding:1.5rem;border-radius:var(--radius-lg);border:1.5px solid #FFE0B2;background:#FFFBF5;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.boxShadow='none'">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:.75rem;">
+                            <i class="material-icons-round" style="color:#B36A00;font-size:1.15rem;">cloud_upload</i>
+                            <span style="font-weight:800;color:#0D1F1F;font-size:.95rem;">Restore System</span>
+                        </div>
+                        <p style="font-size:.8rem;color:#6B8E8E;margin-bottom:1.25rem;line-height:1.6;"><span style="font-weight:800;color:#BA1A1A;">WARNING:</span> Restoring will <span style="text-decoration:underline;">erase current data</span> and replace it with the backup file.</p>
+                        <form id="recoveryForm" onsubmit="handleRecovery(event)" style="display:flex;flex-direction:column;gap:.75rem;">
+                            <input type="file" id="recoveryFile" accept=".zip" style="font-size:.78rem;color:#4A6363;display:block;width:100%;" required>
+                            <button type="submit" id="btnStartRecovery" style="width:100%;padding:11px;border-radius:var(--radius-sm);border:1.5px solid #B36A00;color:#B36A00;background:transparent;font-weight:700;font-size:.85rem;cursor:pointer;font-family:inherit;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;" onmouseover="this.style.background='#B36A00';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='#B36A00'">
+                                <i class="material-icons-round" style="font-size:.9rem;">restore</i> Start Recovery
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-admin-users" class="view-section flex-col gap-6">
+            <div id="pendingSection" style="display:none;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:1.25rem;">
+                    <i class="material-icons-round" style="color:#B36A00;font-size:1.15rem;">pending_actions</i>
+                    <span style="font-size:1rem;font-weight:800;color:#0D1F1F;">Pending Registrations</span>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.875rem;margin-bottom:2rem;" id="pendingGrid"></div>
+                <div style="height:1px;background:#E8F0F0;margin-bottom:1.5rem;"></div>
+            </div>
+            <div style="background:#fff;border-radius:var(--radius-xl);border:1px solid #E8F0F0;box-shadow:var(--shadow-sm);padding:1.5rem;">
+                <h2 style="font-size:1rem;font-weight:800;color:#0D1F1F;margin-bottom:1.25rem;">Registered Users</h2>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.875rem;" id="userGrid"></div>
+            </div>
+        </section>
+
+        <section id="view-reporter-dashboard" class="view-section flex-col gap-8 items-center justify-center min-h-[80vh]">
+            <div style="text-align:center;max-width:520px;">
+                <div style="width:64px;height:64px;border-radius:var(--radius-lg);background:linear-gradient(135deg,#006A6A,#004D4D);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;box-shadow:0 8px 24px rgba(0,106,106,.35);">
+                    <i class="material-icons-round" style="color:#fff;font-size:2rem;">home_repair_service</i>
+                </div>
+                <h1 style="font-size:2rem;font-weight:800;color:#0D1F1F;margin-bottom:.5rem;">Hello, Reporter!</h1>
+                <p style="color:#7AABAB;font-size:.95rem;font-weight:500;margin-bottom:2.5rem;">What would you like to do today?</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;width:100%;">
+                    <button onclick="navigateTo('report-submit')" style="background:#fff;border:1px solid #E8F0F0;border-radius:var(--radius-xl);padding:2rem 1.5rem;text-align:left;cursor:pointer;box-shadow:var(--shadow-sm);transition:all .25s;position:relative;overflow:hidden;" onmouseover="this.style.boxShadow='var(--shadow-lg)';this.style.transform='translateY(-3px)';this.style.borderColor='rgba(0,106,106,.3)'" onmouseout="this.style.boxShadow='var(--shadow-sm)';this.style.transform='none';this.style.borderColor='#E8F0F0'">
+                        <div style="width:48px;height:48px;border-radius:var(--radius-md);background:linear-gradient(135deg,#E0F2F1,#B2DFDB);display:flex;align-items:center;justify-content:center;margin-bottom:1rem;"><i class="material-icons-round" style="color:#006A6A;font-size:1.4rem;">add_circle</i></div>
+                        <div style="font-size:1rem;font-weight:800;color:#0D1F1F;margin-bottom:.35rem;">Submit Report</div>
+                        <div style="font-size:.8rem;color:#7AABAB;line-height:1.5;">Report a damaged item, electrical issue, or facility problem.</div>
+                    </button>
+                    <button onclick="navigateTo('report-status')" style="background:#fff;border:1px solid #E8F0F0;border-radius:var(--radius-xl);padding:2rem 1.5rem;text-align:left;cursor:pointer;box-shadow:var(--shadow-sm);transition:all .25s;position:relative;overflow:hidden;" onmouseover="this.style.boxShadow='var(--shadow-lg)';this.style.transform='translateY(-3px)';this.style.borderColor='rgba(74,99,99,.3)'" onmouseout="this.style.boxShadow='var(--shadow-sm)';this.style.transform='none';this.style.borderColor='#E8F0F0'">
+                        <div style="width:48px;height:48px;border-radius:var(--radius-md);background:#F0F4F4;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;"><i class="material-icons-round" style="color:#4A6363;font-size:1.4rem;">history</i></div>
+                        <div style="font-size:1rem;font-weight:800;color:#0D1F1F;margin-bottom:.35rem;">My Reports</div>
+                        <div style="font-size:.8rem;color:#7AABAB;line-height:1.5;">Track the status of your submitted reports.</div>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-report-submit" class="view-section flex-col items-center justify-center py-10">
+            <div class="glass-card" style="border-radius:var(--radius-xl);padding:2rem;width:100%;max-width:520px;">
+                <div style="display:flex;align-items:center;gap:.875rem;margin-bottom:1.75rem;">
+                    <button onclick="navigateTo('reporter-dashboard')" class="header-icon-btn" style="background:#F0F5F5;"><i class="material-icons-round" style="font-size:1.1rem;">arrow_back</i></button>
+                    <div>
+                        <h2 style="font-size:1.3rem;font-weight:800;color:#0D1F1F;">New Report</h2>
+                        <p style="font-size:.78rem;color:#7AABAB;margin-top:1px;">Describe the issue clearly for faster resolution.</p>
+                    </div>
+                </div>
+
+                <div style="display:flex;flex-direction:column;align-items:center;gap:.875rem;margin-bottom:1.5rem;padding:1.25rem;background:#F7FBFB;border-radius:var(--radius-lg);border:1.5px dashed #C8D8D8;">
+                    <div style="position:relative;width:100%;height:180px;background:#E8F0F0;border-radius:var(--radius-md);overflow:hidden;display:flex;align-items:center;justify-content:center;">
+                        <img id="reportPhotoPreview" style="width:100%;height:100%;object-fit:contain;display:none;">
+                        <video id="reportCameraPreview" style="width:100%;height:100%;object-fit:cover;display:none;" autoplay playsinline></video>
+                        <canvas id="reportCameraCanvas" style="display:none;"></canvas>
+                        <div id="reportPhotoPlaceholder" style="display:flex;flex-direction:column;align-items:center;color:#A0BABA;">
+                            <i class="material-icons-round" style="font-size:2.5rem;margin-bottom:.5rem;">add_a_photo</i>
+                            <span style="font-size:.78rem;font-weight:500;">Take a photo of the issue</span>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:.75rem;width:100%;">
+                        <input type="file" id="reportPhotoInput" accept="image/*" style="display:none;" onchange="handleReportFileSelect(event)">
+                        <button type="button" onclick="document.getElementById('reportPhotoInput').click()" class="btn-outlined" style="flex:1;padding:9px;font-size:.82rem;">Upload</button>
+                        <button type="button" id="reportCaptureBtn" class="btn-primary" style="flex:1;padding:9px;font-size:.82rem;" onclick="handleReportCamera()">
+                            <i class="material-icons-round" style="font-size:.875rem;">camera_alt</i> Capture
+                        </button>
+                    </div>
+                </div>
+
+                <form id="submitReportForm" onsubmit="handleSubmitReport(event)">
+                    <div class="mat-input-group">
+                        <select id="reportRoomSelect" name="room" class="mat-input mat-select" required>
+                            <option value="" disabled selected></option>
+                        </select>
+                        <label class="mat-label">Location / Room</label>
+                    </div>
+                    <div class="mat-input-group" style="position:relative;">
+                        <textarea id="reportDesc" name="desc" class="mat-input" style="height:128px;resize:none;padding-bottom:40px;" placeholder=" " required></textarea>
+                        <label class="mat-label">Description of Damage</label>
+                        <button type="button" id="btnVoiceRecord" onclick="toggleVoiceRecord()" style="position:absolute;left:10px;bottom:10px;font-size:.72rem;background:#F0F5F5;color:#6B8E8E;border:none;cursor:pointer;padding:5px 10px;border-radius:99px;display:flex;align-items:center;gap:5px;font-weight:600;font-family:inherit;transition:all .18s;">
+                            <i class="material-icons-round" id="micIcon" style="font-size:.875rem;">mic</i>
+                            <span id="micText">Dictate</span>
+                        </button>
+                        <button type="button" onclick="analyzeReportPhoto()" id="btnAnalyzeImg" style="position:absolute;right:10px;bottom:10px;font-size:.72rem;background:#E0F2F1;color:#006A6A;border:none;cursor:pointer;padding:5px 10px;border-radius:99px;display:flex;align-items:center;gap:5px;font-weight:700;font-family:inherit;transition:all .18s;">
+                            <i class="material-icons-round" style="font-size:.875rem;">auto_fix_high</i> Analyze Image
+                        </button>
+                    </div>
+                    <div id="reportFeedback" style="text-align:center;margin-bottom:1rem;font-size:.85rem;font-weight:600;display:none;color:#006D31;"></div>
+                    <button type="submit" class="btn-primary" style="width:100%;padding:13px;font-size:.95rem;border-radius:var(--radius-sm);">Submit Report</button>
+                </form>
+            </div>
+        </section>
+
+        <section id="view-report-status" class="view-section flex-col gap-5">
+            <div style="display:flex;align-items:center;gap:.875rem;">
+                <button onclick="navigateTo('reporter-dashboard')" class="header-icon-btn" style="background:#F0F5F5;"><i class="material-icons-round" style="font-size:1.1rem;">arrow_back</i></button>
+                <div>
+                    <h2 style="font-size:1.3rem;font-weight:800;color:#0D1F1F;">My Reports</h2>
+                    <p style="font-size:.78rem;color:#7AABAB;margin-top:1px;">Track all your submitted reports.</p>
+                </div>
+            </div>
+            <div id="myReportsContainer" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;"></div>
+        </section>
+
+        <br><br>
+    </div>
+</main>
+
+<div id="otpModal" class="modal-overlay">
+    <div class="modal-box" style="max-width:400px;">
+        <div class="modal-header">
+            <h3>Verify Email</h3>
+            <button class="modal-close-btn" onclick="closeModal('otpModal')"><i class="material-icons-round" style="font-size:1.1rem;">close</i></button>
+        </div>
+        <div style="padding:2rem;text-align:center;">
+            <div style="width:60px;height:60px;border-radius:99px;background:#E0F2F1;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
+                <i class="material-icons-round" style="font-size:1.75rem;color:#006A6A;">mark_email_read</i>
+            </div>
+            <h2 style="font-size:1.2rem;font-weight:800;color:#0D1F1F;margin-bottom:.5rem;">Enter OTP</h2>
+            <p style="font-size:.825rem;color:#6B8E8E;margin-bottom:1.5rem;">A verification code was sent to<br><span id="otpEmailDisplay" style="font-weight:700;color:#0D1F1F;"></span></p>
+            <div class="mat-input-group">
+                <input type="text" id="otpInput" class="mat-input otp-input-field" placeholder=" " maxlength="6">
+                <label class="mat-label" style="left:50%;transform:translateX(-50%);width:auto;">6-Digit Code</label>
+            </div>
+            <div id="otpFeedback" style="font-size:.825rem;color:#BA1A1A;margin-bottom:1rem;display:none;font-weight:600;"></div>
+            <button onclick="submitOtp()" class="btn-primary" style="width:100%;padding:13px;font-size:.95rem;border-radius:var(--radius-sm);">Verify & Submit</button>
+        </div>
+    </div>
+</div>
+
+    <script>
+        // ==========================================
+        //  GLOBAL STATE & CONFIG
+        // ==========================================
+        const TOKEN_KEY = 'fr_token';
+        const API_BASE = ''; 
+        let currentUser = null;
+        let allReports = [];
+        let currentFilteredReports = [];
+        let allCourses = []; // Cache for course mapping
+        let localStream = null;
+        let pendingReqId = null;       // <--- ADD THIS
+        let pendingOtpType = null; 
+
+        let chartInstances = {};
+        
+        // State for Admin Table
+        let sortState = { field: 'created_at', dir: 'desc' };
+        let currentPage = 1;
+        const ROWS_PER_PAGE = 5;
+
+        // State for Modals
+        let currentEditUserId = null; 
+        let currentRequestId = null;  
+        let currentEditReportId = null;
+        let currentEditRoomId = null;
+        let currentEditCourseId = null;
+
+        // ==========================================
+        //  MODAL HTML TEMPLATES (Injected Dynamically)
+        // ==========================================
+        const MODAL_HTML = `
+        <div id="requestModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 backdrop-blur-sm">
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden animate-[fadeUp_0.2s_ease-out]">
+                <div class="bg-primary p-4 flex justify-between items-center text-white">
+                    <h3 class="font-bold text-lg">Request Details</h3>
+                    <button onclick="closeModal('requestModal')" class="hover:bg-white/20 rounded-full p-1"><i class="material-icons-round">close</i></button>
+                </div>
+                <div class="p-6 flex flex-col items-center gap-4">
+                    <div class="w-32 h-32 bg-gray-100 rounded-full overflow-hidden border-4 border-white shadow-md">
+                        <img id="reqPhoto" src="" class="w-full h-full object-cover" onerror="this.src='https://ui-avatars.com/api/?name=User&background=random'">
+                    </div>
+                    <div class="text-center">
+                        <h2 id="reqName" class="text-2xl font-bold text-gray-800">User Name</h2>
+                        <p id="reqIdno" class="text-primary font-medium">ID: 12345</p>
+                    </div>
+                    <div class="w-full grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl text-sm">
+                        <div><span class="text-gray-500 block">Email</span> <span id="reqEmail" class="font-medium text-gray-800">email@isu.edu.ph</span></div>
+                        <div class="col-span-2"><span class="text-gray-500 block">Course</span> <span id="reqCourse" class="font-medium text-gray-800">BSCS</span></div>
+                        <div><span class="text-gray-500 block">Contact</span> <span id="reqCp" class="font-medium text-gray-800">09123456789</span></div>
+                        <div><span class="text-gray-500 block">Request Type</span> <span id="reqType" class="font-medium text-gray-800 uppercase">Signup</span></div>
+                    </div>
+                    <div class="flex gap-3 w-full mt-2">
+                        <button id="btnReject" class="flex-1 py-3 rounded-xl border border-error text-error font-bold hover:bg-red-50 transition">Reject</button>
+                        <button id="btnApprove" class="flex-1 py-3 rounded-xl bg-success text-white font-bold hover:bg-green-700 transition shadow-lg">Approve</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="userEditModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 backdrop-blur-sm">
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden animate-[fadeUp_0.2s_ease-out]">
+                <div class="bg-primary p-4 flex justify-between items-center text-white">
+                    <h3 class="font-bold text-lg">Edit User</h3>
+                    <button onclick="closeModal('userEditModal')" class="hover:bg-white/20 rounded-full p-1"><i class="material-icons-round">close</i></button>
+                </div>
+                <div class="p-6">
+                    <form id="editUserForm" onsubmit="handleUpdateUser(event)" class="flex flex-col gap-4">
+                        <div class="flex gap-3">
+                            <div class="flex-1"><label class="text-xs text-gray-500 font-bold">First Name</label><input name="first_name" class="w-full p-2 border rounded-lg bg-gray-50" required></div>
+                            <div class="flex-1"><label class="text-xs text-gray-500 font-bold">Last Name</label><input name="last_name" class="w-full p-2 border rounded-lg bg-gray-50" required></div>
+                        </div>
+                        <div><label class="text-xs text-gray-500 font-bold">Email</label><input name="email" class="w-full p-2 border rounded-lg bg-gray-50" required></div>
+                        <div class="flex gap-3">
+                            <div class="flex-1"><label class="text-xs text-gray-500 font-bold">ID Number</label><input name="idno" class="w-full p-2 border rounded-lg bg-gray-50" required></div>
+                            <div class="flex-1"><label class="text-xs text-gray-500 font-bold">Contact</label><input name="cp" class="w-full p-2 border rounded-lg bg-gray-50"></div>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500 font-bold">Course</label>
+                            <select name="course" id="editUserCourseSelect" class="w-full p-2 border rounded-lg bg-white mat-select">
+                                </select>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="flex-1">
+                                <label class="text-xs text-gray-500 font-bold">Role</label>
+                                <select name="role" class="w-full p-2 border rounded-lg bg-white mat-select">
+                                    <option value="reporter">Reporter</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                            <div class="flex-1">
+                                <label class="text-xs text-gray-500 font-bold">Status</label>
+                                <select name="status" class="w-full p-2 border rounded-lg bg-white mat-select">
+                                    <option value="approved">Approved</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="suspended">Suspended</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary w-full justify-center py-3 mt-2">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="reportEditModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 backdrop-blur-sm">
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-[fadeUp_0.2s_ease-out]">
+                <div class="bg-primary p-4 flex justify-between items-center text-white">
+                    <h3 class="font-bold text-lg">Edit Report</h3>
+                    <button onclick="closeModal('reportEditModal')" class="hover:bg-white/20 rounded-full p-1"><i class="material-icons-round">close</i></button>
+                </div>
+                <div class="p-6">
+                    <form id="editReportForm" onsubmit="handleEditReportSubmit(event)" class="flex flex-col gap-4">
+                        <div>
+                            <label class="text-xs text-gray-500 font-bold mb-1 block">Location / Room</label>
+                            <select id="editReportRoom" name="location" class="w-full p-3 border rounded-lg bg-gray-50 focus:border-primary outline-none mat-select" required>
+                                </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500 font-bold mb-1 block">Description</label>
+                            <textarea name="description" class="w-full p-3 border rounded-lg bg-gray-50 h-32 resize-none focus:border-primary outline-none" required></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary w-full justify-center py-3 mt-2">Update Report</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="roomEditModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 backdrop-blur-sm">
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden animate-[fadeUp_0.2s_ease-out]">
+                <div class="bg-primary p-4 flex justify-between items-center text-white">
+                    <h3 class="font-bold text-lg">Edit Room</h3>
+                    <button onclick="closeModal('roomEditModal')" class="hover:bg-white/20 rounded-full p-1"><i class="material-icons-round">close</i></button>
+                </div>
+                <div class="p-6">
+                    <form id="editRoomForm" onsubmit="handleUpdateRoom(event)" class="flex flex-col gap-4">
+                        <div>
+                            <label class="text-xs text-gray-500 font-bold mb-1 block">Room Name</label>
+                            <input name="name" id="editRoomNameInput" class="w-full p-3 border rounded-lg bg-gray-50 focus:border-primary outline-none" required>
+                        </div>
+                        <button type="submit" class="btn-primary w-full justify-center py-3 mt-2">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="courseEditModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 backdrop-blur-sm">
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-[fadeUp_0.2s_ease-out]">
+                <div class="bg-primary p-4 flex justify-between items-center text-white">
+                    <h3 class="font-bold text-lg">Edit Course</h3>
+                    <button onclick="closeModal('courseEditModal')" class="hover:bg-white/20 rounded-full p-1"><i class="material-icons-round">close</i></button>
+                </div>
+                <div class="p-6">
+                    <form id="editCourseForm" onsubmit="handleUpdateCourse(event)" class="flex flex-col gap-4">
+                        <div><label class="text-xs text-gray-500 font-bold mb-1 block">Abbreviation</label><input name="abbreviation" id="editCourseAbbr" class="w-full p-3 border rounded-lg bg-gray-50 focus:border-primary outline-none" required></div>
+                        <div><label class="text-xs text-gray-500 font-bold mb-1 block">Full Name</label><input name="full_name" id="editCourseFull" class="w-full p-3 border rounded-lg bg-gray-50 focus:border-primary outline-none" required></div>
+                        <button type="submit" class="btn-primary w-full justify-center py-3 mt-2">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div id="aiAnalysisModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 backdrop-blur-sm">
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden animate-[fadeUp_0.2s_ease-out] flex flex-col max-h-[90vh]">
+                <div class="bg-gradient-to-r from-gray-900 to-gray-800 p-6 flex justify-between items-start text-white shrink-0">
+                    <div class="flex gap-4 items-center">
+                        <div class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/20 shadow-inner">
+                            <i class="material-icons-round text-2xl text-teal-300">psychology</i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-xl tracking-tight">Prescriptive AI Analysis</h3>
+                            <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Powered by Gemini 3.0</p>
+                        </div>
+                    </div>
+                    <button onclick="closeModal('aiAnalysisModal')" class="hover:bg-white/10 rounded-full p-2 transition"><i class="material-icons-round">close</i></button>
+                </div>
+
+                <div class="p-8 overflow-y-auto flex-1 bg-surface-50" id="aiModalContent">
+                    </div>
+
+                <div class="p-4 border-t border-gray-200 bg-white flex justify-end gap-3 shrink-0">
+                    <button onclick="closeModal('aiAnalysisModal')" class="btn-outlined">Close</button>
+                    <button class="btn-primary shadow-lg bg-gray-900 border-transparent" onclick="window.print()">Print Analysis</button>
+                </div>
+            </div>
+        </div>
+        `;
+
+        // Inject modals into body
+        document.body.insertAdjacentHTML('beforeend', MODAL_HTML);
+
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); }
+
+        // ==========================================
+        //  NAVIGATION ROUTER
+        // ==========================================
+        function navigateTo(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            const target = document.getElementById(`view-${viewId}`);
+            if (target) target.classList.add('active');
+
+            const isAuthPage = ['login', 'signup', 'forgot'].includes(viewId);
+            const sidebar = document.getElementById('mainSidebar');
+            const header = document.getElementById('mainHeader');
+
+            if (isAuthPage) {
+                sidebar.classList.add('hidden'); sidebar.classList.remove('flex');
+                header.classList.add('hidden'); header.classList.remove('flex');
+            } else {
+                sidebar.classList.remove('hidden'); sidebar.classList.add('flex');
+                header.classList.remove('hidden'); header.classList.add('flex');
+                
+                // Routes
+                if (viewId === 'admin-dashboard') initAdminDashboard(); // Charts Only
+                if (viewId === 'admin-reports') initAdminReports();     // Table Only (NEW)
+                if (viewId === 'admin-courses') loadAdminCourses();
+                if (viewId === 'admin-users') loadAdminUsers();
+                if (viewId === 'admin-rooms') loadAdminRooms();
+                
+                if (viewId === 'report-status') initMyReports();
+                if (viewId === 'report-submit') loadRoomOptions('#reportRoomSelect');
+            }
+            if (viewId === 'signup') loadCourses();
+            document.getElementById('contentScroll').scrollTop = 0;
+        }
+
+        // ==========================================
+        //  AUTH & API HELPERS
+        // ==========================================
+        function getToken() { return localStorage.getItem(TOKEN_KEY); }
+        function setToken(t) { 
+            if(t) localStorage.setItem(TOKEN_KEY, t); 
+            else localStorage.removeItem(TOKEN_KEY); 
+        }
+
+        async function fetchJSON(path, opts = {}) {
+            const token = getToken();
+            const headers = { ...(opts.headers || {}) };
+            if (!headers['Content-Type'] && !(opts.body instanceof FormData)) {
+                headers['Content-Type'] = 'application/json';
+            }
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            if (opts.body && headers['Content-Type'] === 'application/json') {
+                opts.body = JSON.stringify(opts.body);
+            }
+
+            try {
+                const res = await fetch(API_BASE + path, { ...opts, headers });
+                if (res.status === 401) {
+                    setToken(null);
+                    navigateTo('login');
+                    throw new Error('Unauthorized');
+                }
+                const text = await res.text();
+                const data = text ? JSON.parse(text) : {};
+                if (!res.ok) throw { status: res.status, data };
+                return data;
+            } catch (e) {
+                console.error("Fetch Error:", e);
+                throw e;
+            }
+        }
+        
+        function showToast(message, type = 'error') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const icon = type === 'success' ? 'check_circle' : 'error';
+            
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<i class="material-icons-round">${icon}</i><div class="text-sm font-medium text-gray-800">${message}</div>`;
+            
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000); // Auto remove after 4s
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+
+            const idno = document.getElementById('loginIdno').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+
+            errorDiv.classList.add('hidden');
+            errorDiv.style.display = 'none';
+
+            try {
+                const res = await fetchJSON('/auth/login', {
+                    method: 'POST',
+                    body: { idno: idno, password: password }
+                });
+
+                setToken(res.token);
+                currentUser = res;
+                setupSidebar(res.role);
+
+                const displayName = res.name || 'User';
+                document.getElementById('headerUserName').innerText = displayName;
+                document.getElementById('headerUserRole').innerText = res.role;
+
+                const photoContainer = document.getElementById('headerPhotoContainer');
+                if (res.photo) {
+                    photoContainer.innerHTML = `<img src="/uploads/${res.photo}" style="width:100%;height:100%;object-fit:cover;">`;
+                } else {
+                    photoContainer.innerHTML = `<span id="headerUserInitials">${displayName.charAt(0).toUpperCase()}</span>`;
+                }
+
+                if (res.role === 'admin') navigateTo('admin-dashboard');
+                else navigateTo('reporter-dashboard');
+
+            } catch (ex) {
+                console.error(ex);
+                const errMsg = ex.data?.error || 'Login failed';
+                errorDiv.querySelector('span').innerText = errMsg;
+                errorDiv.style.display = 'flex';
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        function setupSidebar(role) {
+            const nav = document.getElementById('sidebarNav');
+            nav.innerHTML = '';
+            const createLink = (label, icon, view) => {
+                const btn = document.createElement('button');
+                btn.className = "nav-item flex items-center gap-3 px-4 py-3 text-gray-600 rounded-full transition-colors text-sm font-medium hover:bg-gray-100 text-left w-full";
+                btn.innerHTML = `<i class="material-icons-round text-gray-400 text-xl">${icon}</i> ${label}`;
+                btn.onclick = () => navigateTo(view);
+                nav.appendChild(btn);
+            };
+
+            if (role === 'admin') {
+                createLink('Dashboard', 'dashboard', 'admin-dashboard');
+                createLink('Reports', 'description', 'admin-reports');
+                createLink('Rooms', 'meeting_room', 'admin-rooms');
+                createLink('Users', 'group', 'admin-users');
+                createLink('Courses', 'school', 'admin-courses');
+                // --- NEW LINE BELOW ---
+                createLink('Backup/Restore', 'settings_backup_restore', 'admin-backup');
+            } else {
+                createLink('Dashboard', 'dashboard', 'reporter-dashboard');
+                createLink('New Report', 'add_circle_outline', 'report-submit');
+                createLink('My Status', 'history', 'report-status');
+            }
+        }
+
+        // ==========================================
+        //  COURSE LOGIC (New)
+        // ==========================================
+        async function loadCourses() {
+            try {
+                allCourses = await fetchJSON('/auth/courses');
+                const sel = document.getElementById('signupCourse');
+                sel.innerHTML = '<option value="" disabled selected></option>';
+                allCourses.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.abbreviation;
+                    opt.innerText = c.abbreviation;
+                    sel.appendChild(opt);
+                });
+            } catch(e) { console.log("Public course load failed or not needed yet"); }
+        }
+
+        // Helper to translate BSCS -> Bachelor of Science...
+        function getCourseFullName(abbr) {
+            if(!abbr) return 'N/A';
+            const c = allCourses.find(x => x.abbreviation === abbr);
+            return c ? c.full_name : abbr;
+        }
+
+        async function loadAdminCourses() {
+            const container = document.getElementById('courseListContainer');
+            container.innerHTML = 'Loading...';
+            try {
+                allCourses = await fetchJSON('/auth/admin/courses'); // Refresh cache
+                container.innerHTML = '';
+                allCourses.forEach(c => {
+                    const div = document.createElement('div');
+                    div.className = "flex justify-between items-center p-4 bg-gray-50 rounded-xl border border-gray-100";
+                    div.innerHTML = `
+                        <div>
+                            <div class="font-bold text-gray-800">${c.abbreviation}</div>
+                            <div class="text-xs text-gray-500">${c.full_name}</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="openEditCourseModal('${c.id}', '${c.abbreviation}', '${c.full_name}')" class="text-gray-500 hover:bg-gray-200 p-2 rounded-lg"><i class="material-icons-round text-sm">edit</i></button>
+                            <button onclick="deleteCourse('${c.id}')" class="text-error hover:bg-red-50 p-2 rounded-lg"><i class="material-icons-round text-sm">delete</i></button>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        async function handleAddCourse(e) {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            try {
+                await fetchJSON('/auth/admin/courses', { method: 'POST', body: Object.fromEntries(fd) });
+                e.target.reset();
+                loadAdminCourses();
+            } catch(e) { alert(e.data?.error || 'Add failed'); }
+        }
+
+        function openEditCourseModal(id, abbr, full) {
+            currentEditCourseId = id;
+            document.getElementById('editCourseAbbr').value = abbr;
+            document.getElementById('editCourseFull').value = full;
+            openModal('courseEditModal');
+        }
+
+        async function handleUpdateCourse(e) {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            try {
+                await fetchJSON(`/auth/admin/courses/${currentEditCourseId}`, { method: 'PUT', body: Object.fromEntries(fd) });
+                closeModal('courseEditModal');
+                loadAdminCourses();
+            } catch(e) { alert('Update failed'); }
+        }
+
+        async function deleteCourse(id) {
+            if(!confirm('Delete course?')) return;
+            try { await fetchJSON(`/auth/admin/courses/${id}`, { method: 'DELETE' }); loadAdminCourses(); } catch(e) { alert('Failed'); }
+        }
+
+        // ==========================================
+        //  SIGNUP / CAMERA / FORGOT PASSWORD
+        // ==========================================
+        function checkPasswordStrength(password, prefix = '') {
+            const bar = document.getElementById(prefix + 'strengthBar');
+            if (!bar) return; 
+
+            const criteria = [
+                password.length >= 8,
+                /[A-Z]/.test(password),
+                /[a-z]/.test(password),
+                /[0-9]/.test(password)
+            ];
+            
+            // Update text colors
+            const ids = ['crit-len', 'crit-upper', 'crit-lower', 'crit-num'];
+            ids.forEach((id, idx) => {
+                const el = document.getElementById(prefix + id);
+                if(el) el.classList.toggle('text-success', criteria[idx]);
+            });
+
+            const passed = criteria.filter(Boolean).length;
+            if(passed === 0) { bar.style.width = '0%'; bar.className = 'strength-bar bg-gray-200'; }
+            else if(passed <= 2) { bar.style.width = '30%'; bar.className = 'strength-bar bg-error'; }
+            else if(passed === 3) { bar.style.width = '70%'; bar.className = 'strength-bar bg-warning'; }
+            else { bar.style.width = '100%'; bar.className = 'strength-bar bg-success'; }
+        }
+
+        async function handleCamera() {
+            const video = document.getElementById('cameraPreview');
+            const img = document.getElementById('photoPreview');
+            const placeholder = document.getElementById('photoPlaceholder');
+            const btn = document.getElementById('captureBtn');
+            const canvas = document.getElementById('cameraCanvas');
+
+            if (!localStream) {
+                try {
+                    localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                    video.srcObject = localStream;
+                    video.classList.remove('hidden');
+                    img.classList.add('hidden');
+                    placeholder.classList.add('hidden');
+                    btn.innerHTML = '<i class="material-icons-round text-sm">camera</i> Snap';
+                    btn.classList.replace('btn-primary', 'btn-outlined');
+                } catch (err) { alert('Camera access denied'); }
+            } else {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+                canvas.toBlob(blob => {
+                    window.capturedBlob = blob;
+                    img.src = URL.createObjectURL(blob);
+                    img.classList.remove('hidden');
+                    video.classList.add('hidden');
+                    localStream.getTracks().forEach(t => t.stop());
+                    localStream = null;
+                    btn.innerHTML = '<i class="material-icons-round text-sm">refresh</i> Retake';
+                }, 'image/jpeg', 0.9);
+            }
+        }
+
+        function handleFileSelect(e) {
+             const file = e.target.files[0];
+             if(file) {
+                 const img = document.getElementById('photoPreview');
+                 img.src = URL.createObjectURL(file);
+                 img.classList.remove('hidden');
+                 document.getElementById('photoPlaceholder').classList.add('hidden');
+             }
+        }
+
+        async function handleSignup(e) {
+            e.preventDefault();
+            const form = e.target;
+            const fd = new FormData(form);
+
+            // 1. Password check
+            if (fd.get('password') !== fd.get('confirmPassword')) {
+                showToast("Passwords do not match", 'error');
+                return;
+            }
+            
+            // 2. FIXED: Camera Blob Logic
+            // If we have a captured photo, we must remove the empty 'photo' field 
+            // from the file input first, so the server sees the captured one.
+            if (window.capturedBlob) {
+                fd.delete('photo'); // <--- THIS LINE FIXES THE ISSUE
+                fd.append('photo', window.capturedBlob, 'capture.jpg');
+            }
+
+            try {
+                const res = await fetch('/auth/signup', { method: 'POST', body: fd });
+                const data = await res.json();
+                
+                // OTP Logic
+                if (res.status === 201 && data.require_otp) {
+                    pendingReqId = data.req_id;
+                    pendingOtpType = 'signup';
+                    
+                    const displayEmail = document.getElementById('otpEmailDisplay');
+                    if(displayEmail) displayEmail.innerText = data.email;
+                    
+                    document.getElementById('otpInput').value = '';
+                    openModal('otpModal'); 
+                } 
+                // Success Logic
+                else if(res.ok) {
+                    showToast("Signup successful! Redirecting...", 'success');
+                    setTimeout(() => navigateTo('login'), 1500);
+                } else {
+                    throw { data };
+                }
+            } catch (err) {
+                showToast(err.data?.error || "Signup failed", 'error');
+            }
+        }
+
+        async function handleForgot(e) {
+            e.preventDefault();
+            const form = e.target;
+            
+            if(form.newPassword.value !== form.confirmPassword.value) {
+                showToast("Passwords do not match", 'error'); // <--- UPDATED
+                return;
+            }
+
+            try {
+                // Use fetchJSON to get the response data directly
+                const res = await fetchJSON('/auth/reset_password', { 
+                    method:'POST', 
+                    body: { idno: form.idno.value, newPassword: form.newPassword.value } 
+                });
+
+                // --- NEW OTP LOGIC ---
+                if (res.require_otp) {
+                    pendingReqId = res.req_id;
+                    pendingOtpType = 'reset';
+                    
+                    const displayEmail = document.getElementById('otpEmailDisplay');
+                    if(displayEmail) displayEmail.innerText = res.email;
+
+                    document.getElementById('otpInput').value = '';
+                    openModal('otpModal');
+                } else {
+                    // Fallback for immediate success (if OTP disabled)
+                    showToast("Request submitted!", 'success'); // <--- UPDATED
+                    setTimeout(()=>navigateTo('login'), 1500);
+                }
+            } catch(e) {
+                showToast(e.data?.error || "Failed", 'error'); // <--- UPDATED
+            }
+        }
+        
+        async function submitOtp() {
+            const otp = document.getElementById('otpInput').value;
+            const fb = document.getElementById('otpFeedback');
+            if(!otp) return;
+
+            const endpoint = pendingOtpType === 'signup' ? '/auth/verify_signup_otp' : '/auth/verify_reset_otp';
+
+            try {
+                const res = await fetchJSON(endpoint, {
+                    method: 'POST',
+                    body: { req_id: pendingReqId, otp: otp }
+                });
+
+                closeModal('otpModal');
+                
+                // Show final success message based on type
+                if (pendingOtpType === 'signup') {
+                    const mainFb = document.getElementById('signupFeedback');
+                    mainFb.innerText = "Email Verified! Admin will review your account.";
+                    mainFb.className = "text-success text-center text-sm font-medium block";
+                    mainFb.classList.remove('hidden');
+                    document.getElementById('signupForm').reset();
+                    setTimeout(() => navigateTo('login'), 3000);
+                } else {
+                    const mainFb = document.getElementById('forgotFeedback');
+                    mainFb.innerText = "Verified! Password request sent to admin.";
+                    mainFb.className = "text-success text-center text-sm mb-4 block";
+                    mainFb.classList.remove('hidden');
+                    document.getElementById('forgotForm').reset();
+                    setTimeout(() => navigateTo('login'), 3000);
+                }
+
+            } catch (e) {
+                fb.innerText = e.data?.error || "Invalid Code";
+                fb.classList.remove('hidden');
+            }
+        }
+
+        // ==========================================
+        //  UNIFIED ADMIN DASHBOARD LOGIC
+        // ==========================================
+        
+        // 1. DASHBOARD VIEW (Charts & AI Only)
+        async function initAdminDashboard() {
+            try {
+                // Fetch data for charts
+                const reports = await fetchJSON('/api/reports');
+                allReports = reports; 
+                
+                // Fetch AI Data
+                let aiData = { categories: {}, clusters: [] };
+                try { aiData = await fetchJSON('/api/analytics/ai-dashboard'); } catch (err) { console.warn("AI Analytics unavailable", err); }
+                
+                // Render Charts
+                renderAllCharts(reports, aiData); 
+                loadAdminQueues(); 
+                
+                // Update Top Stats
+                document.getElementById('statTotalReports').innerText = reports.length;
+                document.getElementById('statPending').innerText = reports.filter(r => r.status === 'Pending').length;
+                document.getElementById('statResolved').innerText = reports.filter(r => r.status === 'Repaired').length;
+            } catch (e) { console.warn('Admin load fail', e); }
+        }
+
+        // 2. REPORTS VIEW (Table & Side Stats Only)
+        async function initAdminReports() {
+            try {
+                // Fetch fresh data
+                const reports = await fetchJSON('/api/reports');
+                allReports = reports;
+                
+                // Update the Table (Reuses your existing updateTable logic)
+                updateTable(); 
+
+                // Update the New Side Statistics
+                document.getElementById('repSideTotal').innerText = reports.length;
+                document.getElementById('repSidePending').innerText = reports.filter(r => r.status === 'Pending').length;
+                document.getElementById('repSideProgress').innerText = reports.filter(r => r.status === 'In Progress').length;
+                document.getElementById('repSideRepaired').innerText = reports.filter(r => r.status === 'Repaired').length;
+                
+                loadAdminQueues(); 
+            } catch(e) { console.error("Reports load fail", e); }
+        }
+
+        function renderAllCharts(reports, aiData) {
+            const total = reports.length;
+            if (total === 0) return;
+
+            // --- 1. PREPARE STANDARD DATA ---
+            const statusCounts = {};
+            const roomCounts = {};
+            const reporterCounts = {};
+
+            reports.forEach(r => {
+                statusCounts[r.status] = (statusCounts[r.status] || 0) + 1;
+                const loc = r.location || 'Unknown';
+                roomCounts[loc] = (roomCounts[loc] || 0) + 1;
+                const user = r.user || 'Unknown';
+                reporterCounts[user] = (reporterCounts[user] || 0) + 1;
+            });
+
+            // --- 2. RENDER CHARTS ---
+
+            // Chart A: Status (Preserved existing logic)
+            createDoughnutChartWithLegend(
+                'statusChart', 
+                'statusLegend', 
+                statusCounts, 
+                total, 
+                ['#EA9C10', '#006A6A', '#006D31'], 
+                ['Pending', 'In Progress', 'Repaired'] 
+            );
+
+            // Chart B: Issue Categories (FIXED COLOR LOGIC)
+            const aiCategories = aiData.categories || {};
+            const hasAiData = Object.keys(aiCategories).length > 0;
+            
+            // Fixed colors for consistency
+            const categoryColorMap = {
+                'IT/Computer': '#006A6A',   // Teal
+                'Electrical': '#EA9C10',    // Yellow/Orange
+                'Furniture': '#8E44AD',     // Purple
+                'Plumbing': '#2980B9',      // Blue
+                'Infrastructure': '#7F8C8D',// Gray
+                'Other': '#BDC3C7'          // Light Gray
+            };
+
+            // Use AI data if available, else fallback
+            const dataToRender = hasAiData ? aiCategories : { 'Uncategorized': total };
+            
+            // Map colors to the specific keys present in the data
+            const chartLabels = Object.keys(dataToRender);
+            const chartColors = chartLabels.map(label => categoryColorMap[label] || '#333333');
+
+            createDoughnutChartWithLegend(
+                'typeChart', 
+                'typeLegend', 
+                dataToRender,
+                total, 
+                chartColors
+            );
+
+            // Chart C: Top Rooms (Preserved)
+            createBarChart('roomChart', roomCounts, 'Reports', '#006A6A');
+
+            // Chart D: Top Reporters (Preserved)
+            createBarChart('reporterChart', reporterCounts, 'Reports', '#4A6363');
+
+            // Chart E: AI Clusters (Preserved - ensures Bubble Chart still works)
+            renderClusterChart(aiData.clusters);
+        }
+
+        // Helper for the Cluster Chart (Moved inside)
+        function renderClusterChart(clusters) {
+            const ctx = document.getElementById('aiClusterChart')?.getContext('2d');
+            if(!ctx) return;
+            
+            // Cleanup old chart if exists
+            if(window.clusterChartInstance) window.clusterChartInstance.destroy();
+
+            const datasets = {
+                'Healthy': { label: 'Healthy (Low Maint.)', data: [], backgroundColor: '#006D31' },
+                'Warning': { label: 'Warning (High Load)', data: [], backgroundColor: '#EA9C10' },
+                'Critical': { label: 'Critical (Neglected)', data: [], backgroundColor: '#BA1A1A' }
+            };
+
+            if (clusters) {
+                clusters.forEach(c => {
+                    const status = datasets[c.status] ? c.status : 'Warning';
+                    datasets[status].data.push({
+                        x: c.x,
+                        y: c.y,
+                        r: 8 + (c.x), 
+                        room: c.room
+                    });
+                });
+            }
+
+            window.clusterChartInstance = new Chart(ctx, {
+                type: 'bubble',
+                data: { datasets: Object.values(datasets) },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                // UPDATE THIS LINE:
+                                label: (ctx) => `${ctx.raw.room}: ${ctx.raw.x} Pending Items, ${ctx.raw.y} Days Avg`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Pending Count' }, beginAtZero: true },
+                        y: { title: { display: true, text: 'Avg Days Pending' }, beginAtZero: true } 
+                    }
+                }
+            });
+        }
+
+        // --- TABLE LOGIC ---
+        function updateTable() {
+            const term = document.getElementById('adminSearch').value.toLowerCase();
+            const startVal = document.getElementById('filterStartDate').value;
+            const endVal = document.getElementById('filterEndDate').value;
+
+            // 1. FILTER
+            let processed = allReports.filter(r => {
+                // A. Text Search Filter
+                const matchesText = 
+                    (r.user && r.user.toLowerCase().includes(term)) || 
+                    (r.location && r.location.toLowerCase().includes(term)) ||
+                    (r.description && r.description.toLowerCase().includes(term)) ||
+                    (r.status && r.status.toLowerCase().includes(term)) ||
+                    (r.transaction_no && r.transaction_no.toLowerCase().includes(term));
+
+                if (!matchesText) return false;
+
+                // B. Date Range Filter
+                if (startVal || endVal) {
+                    const reportDate = new Date(r.created_at); // report date (has time)
+                    
+                    // Check Start Date (Set to 00:00:00 of that day)
+                    if (startVal) {
+                        const startDate = new Date(startVal);
+                        startDate.setHours(0, 0, 0, 0);
+                        if (reportDate < startDate) return false;
+                    }
+
+                    // Check End Date (Set to 23:59:59 of that day)
+                    if (endVal) {
+                        const endDate = new Date(endVal);
+                        endDate.setHours(23, 59, 59, 999);
+                        if (reportDate > endDate) return false;
+                    }
+                }
+                
+                return true;
+            });
+
+            // 2. SORT (Existing Logic)
+            const { field, dir } = sortState;
+            const statusOrder = { 'Pending': 1, 'In Progress': 2, 'Repaired': 3 };
+
+            processed.sort((a, b) => {
+                let valA = a[field];
+                let valB = b[field];
+
+                if (field === 'status') {
+                    valA = statusOrder[valA] || 99;
+                    valB = statusOrder[valB] || 99;
+                } else if (field === 'location') {
+                    return dir === 'asc' 
+                        ? valA.localeCompare(valB, undefined, { numeric: true, sensitivity: 'base' })
+                        : valB.localeCompare(valA, undefined, { numeric: true, sensitivity: 'base' });
+                } else if (field === 'user') {
+                    valA = (valA||'').toLowerCase();
+                    valB = (valB||'').toLowerCase();
+                }
+
+                if (valA < valB) return dir === 'asc' ? -1 : 1;
+                if (valA > valB) return dir === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            updateSortIcons(field, dir);
+            
+            // IMPORTANT: Save this so PDF Export uses the date-filtered list
+            currentFilteredReports = processed; 
+
+            // 3. PAGINATE
+            const totalPages = Math.ceil(processed.length / ROWS_PER_PAGE) || 1;
+            if (currentPage > totalPages) currentPage = 1;
+            const startIdx = (currentPage - 1) * ROWS_PER_PAGE;
+            
+            // 4. RENDER
+            renderTableRows(processed.slice(startIdx, startIdx + ROWS_PER_PAGE), startIdx);
+            renderPaginationUI(startIdx, startIdx + ROWS_PER_PAGE, processed.length, totalPages);
+        }
+
+        function renderTableRows(data, startIdx) {
+            const tbody = document.getElementById('adminReportsTable');
+            const empty = document.getElementById('adminEmptyState');
+            tbody.innerHTML = '';
+
+            if(data.length === 0) { empty.classList.remove('hidden'); return; }
+            empty.classList.add('hidden');
+
+            data.forEach((r, i) => {
+                const tr = document.createElement('tr');
+                const badge = {'Pending':'bg-warning/20 text-warning', 'In Progress':'bg-primary/20 text-primary', 'Repaired':'bg-success/20 text-success'}[r.status] || 'bg-gray-100';
+                
+                tr.innerHTML = `
+                    <td class="px-4 py-4 text-center text-xs text-gray-400 font-mono">${startIdx + i + 1}</td>
+                    
+                    <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap font-mono text-xs">
+                        ${r.created_at || '-'}
+                    </td>
+
+                    <td class="px-6 py-4 font-medium text-sm text-gray-800">${r.user || 'Unknown'}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">${r.location}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500 truncate max-w-xs">${r.description}</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded-full text-xs font-bold ${badge}">${r.status}</span></td>
+                    <td class="px-6 py-4 flex gap-2">
+                        <button onclick="analyzeReport('${r.id}')" class="w-8 h-8 rounded-full bg-gray-900 text-teal-400 hover:bg-gray-800 flex items-center justify-center shadow-md transition-transform hover:scale-110" title="Ask AI Expert">
+                            <i class="material-icons-round text-sm">auto_awesome</i>
+                        </button>
+                        
+                        ${r.status !== 'In Progress' ? `<button onclick="updateStatus('${r.id}', 'In Progress')" class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center justify-center" title="Mark In Progress"><i class="material-icons-round text-sm">build</i></button>` : ''}
+                        ${r.status !== 'Repaired' ? `<button onclick="updateStatus('${r.id}', 'Repaired')" class="w-8 h-8 rounded-full bg-green-50 text-green-600 hover:bg-green-100 flex items-center justify-center" title="Mark Repaired"><i class="material-icons-round text-sm">check</i></button>` : ''}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function analyzeReport(id) {
+            openModal('aiAnalysisModal');
+            const container = document.getElementById('aiModalContent');
+            
+            // Loading State
+            container.innerHTML = `
+                <div class="flex flex-col items-center justify-center h-64 gap-4">
+                    <div class="relative w-16 h-16">
+                        <div class="absolute inset-0 rounded-full border-4 border-gray-200"></div>
+                        <div class="absolute inset-0 rounded-full border-4 border-teal-600 border-t-transparent animate-spin"></div>
+                        <i class="material-icons-round absolute inset-0 m-auto text-teal-600 text-xl flex items-center justify-center">auto_awesome</i>
+                    </div>
+                    <p class="text-gray-500 font-medium animate-pulse">Consulting Expert System...</p>
+                </div>
+            `;
+
+            try {
+                const data = await fetchJSON(`/api/reports/${id}/analyze`, { method: 'POST' });
+                renderAiResult(data);
+            } catch (e) {
+                container.innerHTML = `
+                    <div class="p-4 bg-error/10 border border-error/20 text-error rounded-xl text-center">
+                        <i class="material-icons-round text-3xl mb-2">error</i>
+                        <p class="font-bold">Analysis Failed</p>
+                        <p class="text-xs opacity-80">${e.message || 'AI Service Unreachable'}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderAiResult(data) {
+            const container = document.getElementById('aiModalContent');
+            
+            // Priority Color Mapping
+            const pColor = {
+                'High': 'bg-red-100 text-red-700 border-red-200',
+                'Medium': 'bg-orange-100 text-orange-700 border-orange-200',
+                'Low': 'bg-green-100 text-green-700 border-green-200'
+            }[data.priority] || 'bg-gray-100 text-gray-600';
+
+            container.innerHTML = `
+                <div class="space-y-6 animate-[fadeUp_0.3s_ease-out]">
+                    
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-teal-600"></div>
+                        <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                            <i class="material-icons-round text-base">medical_services</i> Technical Diagnosis
+                        </h4>
+                        <p class="text-gray-800 text-lg leading-relaxed font-medium">${data.diagnosis}</p>
+                        <div class="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold border ${pColor}">
+                            ${data.priority} Priority
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                                <i class="material-icons-round text-2xl">payments</i>
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-400 font-bold uppercase">Est. Cost</div>
+                                <div class="text-xl font-bold text-gray-800">${data.cost}</div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center">
+                                <i class="material-icons-round text-2xl">timer</i>
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-400 font-bold uppercase">Est. Time</div>
+                                <div class="text-xl font-bold text-gray-800">${data.time}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                         <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                            <i class="material-icons-round text-base">build</i> Prescriptive Repair Steps
+                        </h4>
+                        <ul class="space-y-3">
+                            ${data.steps.map((step, i) => `
+                                <li class="flex gap-4">
+                                    <span class="w-6 h-6 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">${i+1}</span>
+                                    <span class="text-gray-700 leading-relaxed">${step}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderPaginationUI(start, end, total, pages) {
+            document.getElementById('paginationInfo').innerText = total===0 ? 'No records' : `Showing ${start + 1}-${Math.min(end, total)} of ${total}`;
+            document.getElementById('pageIndicator').innerText = currentPage;
+            document.getElementById('btnPrev').disabled = currentPage === 1;
+            document.getElementById('btnNext').disabled = currentPage === pages || total === 0;
+        }
+
+        function changePage(delta) { currentPage += delta; updateTable(); }
+        
+        function sortReports(field) {
+            if (sortState.field === field) sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+            else { sortState.field = field; sortState.dir = 'asc'; }
+            updateTable();
+        }
+
+        function updateSortIcons(activeField, dir) {
+            // ADD 'created_at' TO THIS ARRAY
+            ['user', 'location', 'status', 'created_at'].forEach(f => {
+                const icon = document.getElementById(`sortIcon-${f}`);
+                if(icon) {
+                    icon.innerText = 'arrow_drop_down';
+                    icon.classList.remove('text-primary', 'rotate-180');
+                    icon.classList.add('text-gray-400');
+                }
+            });
+            const active = document.getElementById(`sortIcon-${activeField}`);
+            if(active) {
+                active.classList.remove('text-gray-400');
+                active.classList.add('text-primary');
+                if(dir === 'asc') active.classList.add('rotate-180');
+            }
+        }
+
+        async function updateStatus(id, status) {
+            try { 
+                // 1. Send the update to the backend
+                await fetchJSON(`/api/reports/${id}`, { method:'PUT', body:{ status }}); 
+                
+                // 2. Refresh the table using the CORRECT function name
+                initAdminReports(); 
+                
+                // Optional: Show a success toast
+                showToast('Status updated successfully', 'success');
+            } catch(e) { 
+                console.error(e); // This will show the actual error in the console (F12)
+                alert('Failed: ' + (e.data?.error || e.message)); 
+            }
+        }
+
+        document.getElementById('adminSearch')?.addEventListener('input', () => { currentPage = 1; updateTable(); });
+
+        function createDoughnutChartWithLegend(canvasId, legendId, dataMap, total, colors, forcedOrder = null) {
+            const ctx = document.getElementById(canvasId)?.getContext('2d');
+            if(!ctx) return;
+
+            // Destroy old instance
+            if(chartInstances[canvasId]) chartInstances[canvasId].destroy();
+
+            // Sort or use forced order
+            let labels = forcedOrder || Object.keys(dataMap);
+            // Ensure data aligns with labels
+            let dataValues = labels.map(l => dataMap[l] || 0);
+            
+            // If no forced order, sort by count descending for better visuals
+            if(!forcedOrder) {
+                const entries = Object.entries(dataMap).sort((a,b) => b[1] - a[1]);
+                labels = entries.map(e => e[0]);
+                dataValues = entries.map(e => e[1]);
+            }
+
+            // Render Chart
+            chartInstances[canvasId] = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: dataValues,
+                        backgroundColor: colors,
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Render Custom Legend with % and Count
+            const legendContainer = document.getElementById(legendId);
+            legendContainer.innerHTML = labels.map((label, i) => {
+                const count = dataValues[i];
+                const pct = ((count / total) * 100).toFixed(1);
+                const color = colors[i % colors.length];
+                return `
+                    <div class="flex items-center justify-between text-sm py-1 border-b border-gray-50 last:border-0">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full" style="background:${color}"></span>
+                            <span class="text-gray-600 font-medium">${label}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-bold text-gray-800">${count}</span>
+                            <span class="text-xs text-gray-400 w-12 inline-block">(${pct}%)</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function createBarChart(canvasId, dataMap, label, color) {
+            const ctx = document.getElementById(canvasId)?.getContext('2d');
+            if(!ctx) return;
+
+            if(chartInstances[canvasId]) chartInstances[canvasId].destroy();
+
+            // Top 5 only
+            const entries = Object.entries(dataMap).sort((a,b) => b[1] - a[1]).slice(0, 5);
+            const labels = entries.map(e => e[0]);
+            const dataValues = entries.map(e => e[1]);
+
+            chartInstances[canvasId] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: dataValues,
+                        backgroundColor: color,
+                        borderRadius: 4,
+                        barThickness: 20,
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // Horizontal Bar
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { stepSize: 1 } },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function createDoughnutChartWithLegend(canvasId, legendId, dataMap, total, colors, forcedOrder = null) {
+            const ctx = document.getElementById(canvasId)?.getContext('2d');
+            if(!ctx) return;
+
+            // Destroy old instance
+            if(chartInstances[canvasId]) chartInstances[canvasId].destroy();
+
+            // Sort or use forced order
+            let labels = forcedOrder || Object.keys(dataMap);
+            // Ensure data aligns with labels
+            let dataValues = labels.map(l => dataMap[l] || 0);
+            
+            // If no forced order, sort by count descending for better visuals
+            if(!forcedOrder) {
+                const entries = Object.entries(dataMap).sort((a,b) => b[1] - a[1]);
+                labels = entries.map(e => e[0]);
+                dataValues = entries.map(e => e[1]);
+            }
+
+            // Render Chart
+            chartInstances[canvasId] = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: dataValues,
+                        backgroundColor: colors,
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Render Custom Legend with % and Count
+            const legendContainer = document.getElementById(legendId);
+            legendContainer.innerHTML = labels.map((label, i) => {
+                const count = dataValues[i];
+                const pct = ((count / total) * 100).toFixed(1);
+                const color = colors[i % colors.length];
+                return `
+                    <div class="flex items-center justify-between text-sm py-1 border-b border-gray-50 last:border-0">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full" style="background:${color}"></span>
+                            <span class="text-gray-600 font-medium">${label}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-bold text-gray-800">${count}</span>
+                            <span class="text-xs text-gray-400 w-12 inline-block">(${pct}%)</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function createBarChart(canvasId, dataMap, label, color) {
+            const ctx = document.getElementById(canvasId)?.getContext('2d');
+            if(!ctx) return;
+
+            if(chartInstances[canvasId]) chartInstances[canvasId].destroy();
+
+            // Top 5 only
+            const entries = Object.entries(dataMap).sort((a,b) => b[1] - a[1]).slice(0, 5);
+            const labels = entries.map(e => e[0]);
+            const dataValues = entries.map(e => e[1]);
+
+            chartInstances[canvasId] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: dataValues,
+                        backgroundColor: color,
+                        borderRadius: 4,
+                        barThickness: 20,
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // Horizontal Bar
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { stepSize: 1 } },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // --- QUEUES (Header Icons) ---
+        async function loadAdminQueues() {
+            try {
+                const [signups, resets] = await Promise.all([
+                    fetchJSON('/auth/admin/signup_requests').catch(()=>[]),
+                    fetchJSON('/auth/admin/reset_requests').catch(()=>[])
+                ]);
+                
+                // Update Lock Icon (Requests)
+                const allReqs = [...signups.map(s=>({...s, type:'signup'})), ...resets.map(r=>({...r, type:'reset'}))];
+                const lockDot = document.getElementById('lockDot');
+                if(lockDot) {
+                    if(allReqs.length > 0) lockDot.classList.remove('hidden');
+                    else lockDot.classList.add('hidden');
+                }
+                
+                const lockContent = document.getElementById('lockContent');
+                if(lockContent) {
+                    lockContent.innerHTML = '';
+                    if(allReqs.length === 0) lockContent.innerHTML = '<div class="p-4 text-center text-xs text-gray-400">No pending requests</div>';
+                    else {
+                        allReqs.forEach(req => {
+                            const div = document.createElement('div');
+                            div.className = "p-3 border-b border-gray-50 hover:bg-gray-50 flex justify-between items-center text-sm cursor-pointer";
+                            div.innerHTML = `<div><div class="font-bold text-gray-800">${req.name}</div><div class="text-xs text-gray-400">${req.type}</div></div>`;
+                            div.onclick = () => openRequestModal(req);
+                            lockContent.appendChild(div);
+                        });
+                    }
+                }
+
+                // Update Bell Icon (Reports)
+                const pendingReports = allReports.filter(r => r.status === 'Pending');
+                const bellDot = document.getElementById('bellDot');
+                if(bellDot) {
+                    if(pendingReports.length > 0) bellDot.classList.remove('hidden');
+                    else bellDot.classList.add('hidden');
+                }
+                
+                const bellContent = document.getElementById('bellContent');
+                if(bellContent) {
+                    bellContent.innerHTML = '';
+                    if(pendingReports.length === 0) bellContent.innerHTML = '<div class="p-4 text-center text-xs text-gray-400">All caught up!</div>';
+                    else {
+                        pendingReports.forEach(r => {
+                            bellContent.innerHTML += `<div class="p-3 border-b border-gray-50 text-sm"><div class="font-bold text-gray-800">${r.location}</div><div class="text-xs text-gray-500 truncate">${r.description}</div></div>`;
+                        });
+                    }
+                }
+
+            } catch (e) { console.error("Queue load error", e); }
+        }
+
+        // ==========================================
+        //  ADMIN USER MANAGEMENT (Pending & Existing)
+        // ==========================================
+        async function loadAdminUsers() {
+            const userGrid = document.getElementById('userGrid');
+            const pendingGrid = document.getElementById('pendingGrid');
+            const pendingSection = document.getElementById('pendingSection');
+            
+            // Show loading state
+            userGrid.innerHTML = '<div class="col-span-full text-center text-gray-400 py-8">Loading users...</div>'; 
+            pendingGrid.innerHTML = '';
+
+            try {
+                // 1. Fetch Users, Signups, AND Reset Requests
+                const [users, signups, resets] = await Promise.all([
+                    fetchJSON('/auth/admin/users'),
+                    fetchJSON('/auth/admin/signup_requests').catch(() => []),
+                    fetchJSON('/auth/admin/reset_requests').catch(() => [])
+                ]);
+
+                // 2. Combine Signups and Resets into one "Pending" list
+                // We add a 'type' property so the buttons know which API to call later
+                const pendingReqs = [
+                    ...signups.map(s => ({ ...s, type: 'signup' })), 
+                    ...resets.map(r => ({ ...r, type: 'reset' }))
+                ];
+
+                // 3. Render Pending Requests Section
+                if (pendingReqs.length > 0) {
+                    pendingSection.classList.remove('hidden');
+                    pendingGrid.innerHTML = ''; // Clear container
+                    
+                    pendingReqs.forEach(req => {
+                        const isSignup = req.type === 'signup';
+                        
+                        // Customize text based on request type
+                        const subText = isSignup ? getCourseFullName(req.course) : 'Password Reset Request';
+                        const statusLabel = isSignup ? 'New Registration' : 'Account Recovery';
+                        
+                        // Choose Icon or Photo
+                        let iconHtml;
+                        if(req.photo) {
+                            iconHtml = `<img src="${req.photo}" class="w-full h-full object-cover">`;
+                        } else {
+                            const iconName = isSignup ? 'person_add' : 'lock_reset';
+                            iconHtml = `<i class="material-icons-round text-2xl">${iconName}</i>`;
+                        }
+
+                        const card = document.createElement('div');
+                        card.className = "bg-white p-4 rounded-2xl shadow-md border border-warning/50 flex items-center gap-4 bg-warning/5 relative group";
+                        card.innerHTML = `
+                            <div class="w-12 h-12 rounded-full bg-warning/20 text-warning flex items-center justify-center font-bold text-lg shrink-0 overflow-hidden border-2 border-white shadow-sm">
+                                ${iconHtml}
+                            </div>
+                            <div class="flex-1 overflow-hidden cursor-pointer" onclick='openRequestModal(${JSON.stringify(req)})'>
+                                <div class="font-bold text-gray-800 truncate text-base">${req.name}</div>
+                                <div class="text-xs text-gray-500 truncate">${subText}</div>
+                                <div class="text-xs text-warning font-bold mt-1 uppercase tracking-wide flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-warning animate-pulse"></span> ${statusLabel}
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <button onclick="approveRequest('${req.id}', '${req.type}')" title="Approve" class="w-9 h-9 rounded-full bg-success text-white flex items-center justify-center shadow-md hover:bg-green-600 hover:scale-110 transition-all duration-200">
+                                    <i class="material-icons-round text-sm">check</i>
+                                </button>
+                                <button onclick="rejectRequest('${req.id}', '${req.type}')" title="Reject" class="w-9 h-9 rounded-full bg-white border border-error text-error flex items-center justify-center shadow-sm hover:bg-error hover:text-white hover:scale-110 transition-all duration-200">
+                                    <i class="material-icons-round text-sm">close</i>
+                                </button>
+                            </div>
+                        `;
+                        pendingGrid.appendChild(card);
+                    });
+                } else { 
+                    pendingSection.classList.add('hidden'); 
+                }
+
+                // 4. Render Existing Users List
+                userGrid.innerHTML = '';
+                if (users.length === 0) {
+                    userGrid.innerHTML = '<div class="col-span-full text-center text-gray-400">No users found.</div>';
+                }
+                
+                users.forEach(u => {
+                    const name = (u.last_name) ? `${u.last_name}, ${u.first_name}` : (u.email || 'Unknown');
+                    
+                    // Generate Avatar or Photo
+                    const img = u.photo 
+                        ? `<img src="${u.photo}" class="w-full h-full object-cover">` 
+                        : `<div class="w-full h-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xl">${name[0]}</div>`;
+                    
+                    const courseFull = getCourseFullName(u.course); 
+                    
+                    const card = document.createElement('div');
+                    card.className = "bg-white p-4 rounded-2xl shadow-material border border-gray-50 flex items-center gap-4 relative group hover:shadow-lg transition-all duration-300";
+                    card.innerHTML = `
+                        <div class="w-14 h-14 rounded-full overflow-hidden bg-gray-100 shrink-0 border border-gray-100">${img}</div>
+                        <div class="flex-1 overflow-hidden">
+                            <div class="font-bold text-gray-800 truncate">${name}</div>
+                            <div class="text-xs text-gray-500 truncate" title="${courseFull}">${courseFull}</div>
+                            <div class="flex gap-2 mt-1.5">
+                                <span class="text-[10px] uppercase font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-md tracking-wide">${u.role}</span>
+                                <span class="text-[10px] uppercase font-bold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md tracking-wide">${u.status}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Hover Actions -->
+                        <div class="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute right-2 top-2 bg-white/90 p-1 rounded-lg backdrop-blur-sm">
+                            <button onclick="openEditUserModal(${u.id})" class="w-8 h-8 rounded-full hover:bg-primary hover:text-white flex items-center justify-center transition text-gray-500" title="Edit User">
+                                <i class="material-icons-round text-sm">edit</i>
+                            </button>
+                            <button onclick="deleteUser('${u.id}')" class="w-8 h-8 rounded-full hover:bg-error hover:text-white flex items-center justify-center transition text-gray-500" title="Delete User">
+                                <i class="material-icons-round text-sm">delete</i>
+                            </button>
+                        </div>
+                    `;
+                    userGrid.appendChild(card);
+                });
+
+            } catch(e) { 
+                console.error(e);
+                userGrid.innerHTML = '<div class="col-span-full text-center text-error">Failed to load users.</div>';
+            }
+        }
+
+        // Request Modal & Actions
+        function openRequestModal(req) {
+            currentRequestId = req.id;
+            document.getElementById('reqName').innerText = req.name;
+            document.getElementById('reqEmail').innerText = req.email;
+            document.getElementById('reqIdno').innerText = `ID: ${req.idno}`;
+            document.getElementById('reqType').innerText = req.type;
+            
+            const photoElem = document.getElementById('reqPhoto');
+            if(req.type === 'signup') {
+                const courseFull = getCourseFullName(req.course);
+                document.getElementById('reqCourse').innerText = courseFull || 'N/A';
+                document.getElementById('reqCp').innerText = req.cp || 'N/A';
+                photoElem.src = req.photo ? req.photo : `https://ui-avatars.com/api/?name=${req.name}`;
+            } else {
+                document.getElementById('reqCourse').innerText = '-';
+                document.getElementById('reqCp').innerText = '-';
+                photoElem.src = `https://ui-avatars.com/api/?name=${req.name}`;
+            }
+            document.getElementById('btnApprove').onclick = () => approveRequest(req.id, req.type);
+            document.getElementById('btnReject').onclick = () => rejectRequest(req.id, req.type);
+            openModal('requestModal');
+        }
+
+        async function approveRequest(id, type) {
+            try {
+                await fetchJSON(`/auth/admin/approve_${type}/${id}`, { method: 'POST' });
+                closeModal('requestModal');
+                loadAdminUsers(); 
+                loadAdminQueues(); // Update header
+            } catch (e) { alert('Action failed'); }
+        }
+        async function rejectRequest(id, type) {
+            if(!confirm('Reject?')) return;
+            try {
+                await fetchJSON(`/auth/admin/reject_${type}/${id}`, { method: 'POST' });
+                closeModal('requestModal');
+                loadAdminUsers();
+                loadAdminQueues();
+            } catch (e) { alert('Action failed'); }
+        }
+
+        // User Edit/Delete
+        async function openEditUserModal(userId) {
+            try {
+                const user = await fetchJSON(`/auth/admin/users/${userId}`);
+                currentEditUserId = userId;
+                const f = document.getElementById('editUserForm');
+                // Populate standard fields...
+                f.first_name.value = user.first_name;
+                f.last_name.value = user.last_name;
+                f.email.value = user.email;
+                f.idno.value = user.idno;
+                f.cp.value = user.cp || '';
+                f.role.value = user.role;
+                f.status.value = user.status;
+                
+                // Populate Course Dropdown
+                const courseSel = document.getElementById('editUserCourseSelect');
+                courseSel.innerHTML = '<option value=""></option>';
+                allCourses.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.abbreviation;
+                    opt.innerText = c.abbreviation; // Or `${c.abbreviation} - ${c.full_name}`
+                    if(c.abbreviation === user.course) opt.selected = true;
+                    courseSel.appendChild(opt);
+                });
+
+                openModal('userEditModal');
+            } catch(e) { alert('Load failed'); }
+        }
+
+        async function handleUpdateUser(e) {
+            e.preventDefault();
+            try {
+                await fetchJSON(`/auth/admin/users/${currentEditUserId}`, { method: 'PUT', body: Object.fromEntries(new FormData(e.target)) });
+                closeModal('userEditModal');
+                loadAdminUsers();
+            } catch(e) { alert('Update failed'); }
+        }
+        
+        async function deleteUser(id) {
+            if(!confirm('Delete user?')) return;
+            try { await fetchJSON(`/auth/admin/users/${id}`, { method: 'DELETE' }); loadAdminUsers(); } catch(e) { alert('Failed'); }
+        }
+
+        // ==========================================
+        //  REPORTER LOGIC (My Reports with Edit/Delete)
+        // ==========================================
+        async function initMyReports() {
+            const container = document.getElementById('myReportsContainer');
+            container.innerHTML = 'Loading...';
+            try {
+                const data = await fetchJSON('/api/reports/mine');
+                container.innerHTML = '';
+                if(data.length === 0) { container.innerHTML = 'No reports.'; return; }
+                
+                data.forEach(r => {
+                    const div = document.createElement('div');
+                    div.className = "bg-white p-5 rounded-2xl shadow-material border border-gray-50 flex flex-col gap-2 relative group";
+                    div.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-bold text-gray-800">${r.location}</h4>
+                                <div class="text-xs text-gray-400 font-mono mt-0.5">${r.transaction_no || '...'}</div>
+                            </div>
+                            <span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600 font-medium">${r.status}</span>
+                        </div>
+                        <p class="text-sm text-gray-500 flex-1 mt-2">${r.description}</p>
+                        <div class="text-xs text-gray-400 mt-2 pt-2 border-t border-gray-50">${new Date(r.created_at).toLocaleDateString()}</div>
+                        
+                        ${r.status === 'Pending' ? `
+                        <div class="flex gap-2 mt-3 border-t border-gray-100 pt-3">
+                             <button onclick='openEditReportModal(${JSON.stringify(r)})' class="text-xs font-bold text-gray-500 hover:text-primary flex items-center gap-1">
+                                <i class="material-icons-round text-sm">edit</i> Edit
+                             </button>
+                             <button onclick="deleteMyReport('${r.id}')" class="text-xs font-bold text-gray-500 hover:text-error flex items-center gap-1">
+                                <i class="material-icons-round text-sm">delete</i> Delete
+                             </button>
+                        </div>
+                        ` : ''}
+                    `;
+                    container.appendChild(div);
+                });
+            } catch (e) { container.innerHTML = 'Error loading reports'; }
+        }
+
+        async function deleteMyReport(id) {
+            if(!confirm('Delete this report?')) return;
+            try {
+                await fetchJSON(`/api/reports/${id}`, { method: 'DELETE' });
+                initMyReports();
+            } catch(e) { alert(e.data?.error || 'Cannot delete'); }
+        }
+
+        async function openEditReportModal(report) {
+            currentEditReportId = report.id;
+            await loadRoomOptions('#editReportRoom');
+            const form = document.getElementById('editReportForm');
+            form.location.value = report.location;
+            form.description.value = report.description;
+            openModal('reportEditModal');
+        }
+
+        async function handleEditReportSubmit(e) {
+            e.preventDefault();
+            try {
+                await fetchJSON(`/api/reports/${currentEditReportId}/edit`, {
+                    method: 'PUT',
+                    body: { 
+                        location: e.target.location.value,
+                        description: e.target.description.value
+                    }
+                });
+                closeModal('reportEditModal');
+                initMyReports();
+            } catch(e) { alert(e.data?.error || 'Update failed'); }
+        }
+
+        async function loadRoomOptions(selector) {
+            try {
+                const rooms = await fetchJSON('/auth/rooms');
+                const sel = document.querySelector(selector);
+                sel.innerHTML = '<option value="" disabled selected></option>';
+                rooms.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r.name;
+                    opt.textContent = r.name;
+                    sel.appendChild(opt);
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        async function handleSubmitReport(e) {
+            e.preventDefault();
+            try {
+                await fetchJSON('/api/reports', { method: 'POST', body: { location: e.target.room.value, desc: e.target.desc.value } });
+                document.getElementById('reportFeedback').classList.remove('hidden');
+                setTimeout(() => navigateTo('report-status'), 1000);
+                e.target.reset();
+            } catch (ex) { alert('Submission failed'); }
+        }
+        
+       // ==========================================
+        //  REPORT PHOTO & AI ANALYSIS LOGIC
+        // ==========================================
+        let reportLocalStream = null;
+        let reportCapturedBlob = null;
+
+        async function handleReportCamera() {
+            const video = document.getElementById('reportCameraPreview');
+            const img = document.getElementById('reportPhotoPreview');
+            const placeholder = document.getElementById('reportPhotoPlaceholder');
+            const btn = document.getElementById('reportCaptureBtn');
+            const canvas = document.getElementById('reportCameraCanvas');
+
+            if (!reportLocalStream) {
+                try {
+                    reportLocalStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                    video.srcObject = reportLocalStream;
+                    video.classList.remove('hidden');
+                    img.classList.add('hidden');
+                    placeholder.classList.add('hidden');
+                    btn.innerHTML = '<i class="material-icons-round text-sm">camera</i> Snap';
+                    btn.classList.replace('btn-primary', 'btn-outlined');
+                } catch (err) { alert('Camera access denied'); }
+            } else {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+                canvas.toBlob(blob => {
+                    reportCapturedBlob = blob; // Store for AI
+                    img.src = URL.createObjectURL(blob);
+                    img.classList.remove('hidden');
+                    video.classList.add('hidden');
+                    reportLocalStream.getTracks().forEach(t => t.stop());
+                    reportLocalStream = null;
+                    btn.innerHTML = '<i class="material-icons-round text-sm">refresh</i> Retake';
+                    btn.classList.replace('btn-outlined', 'btn-primary');
+                }, 'image/jpeg', 0.9);
+            }
+        }
+
+        function handleReportFileSelect(e) {
+             const file = e.target.files[0];
+             if(file) {
+                 reportCapturedBlob = file; // Store for AI
+                 const img = document.getElementById('reportPhotoPreview');
+                 img.src = URL.createObjectURL(file);
+                 img.classList.remove('hidden');
+                 document.getElementById('reportPhotoPlaceholder').classList.add('hidden');
+                 document.getElementById('reportCameraPreview').classList.add('hidden');
+             }
+        }
+
+        async function analyzeReportPhoto() {
+            if (!reportCapturedBlob) {
+                alert("Please capture or upload a photo first.");
+                return;
+            }
+
+            const descField = document.getElementById('reportDesc');
+            const btn = document.getElementById('btnAnalyzeImg');
+            const originalBtnContent = btn.innerHTML;
+
+            // UI Loading State
+            descField.value = "Analyzing image...";
+            descField.disabled = true;
+            btn.innerHTML = `<i class="material-icons-round animate-spin text-sm">refresh</i> Analyzing...`;
+            btn.disabled = true;
+
+            const fd = new FormData();
+            fd.append('image', reportCapturedBlob);
+
+            try {
+                const token = getToken();
+                const res = await fetch(API_BASE + '/api/reports/analyze_image', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: fd
+                });
+                
+                const data = await res.json();
+                if (res.ok) {
+                    descField.value = data.description; // Auto-fill
+                } else {
+                    descField.value = "";
+                    alert(data.error || "Analysis failed");
+                }
+            } catch (e) {
+                console.error(e);
+                descField.value = "";
+                alert("Error connecting to AI service");
+            } finally {
+                descField.disabled = false;
+                btn.innerHTML = originalBtnContent;
+                btn.disabled = false;
+            }
+        }
+
+        // ==========================================
+        //  VOICE TO TEXT LOGIC (Web Speech API)
+        // ==========================================
+        let recognition;
+        let isRecordingVoice = false;
+
+        // Initialize SpeechRecognition if supported by the browser
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = false; // Set to true if you want to see words as they are spoken
+
+            recognition.onresult = (event) => {
+                let finalTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    }
+                }
+                
+                if (finalTranscript) {
+                    const descField = document.getElementById('reportDesc');
+                    // Append text smoothly with a space if there's already text
+                    const currentVal = descField.value.trim();
+                    descField.value = currentVal ? currentVal + ' ' + finalTranscript.trim() : finalTranscript.trim();
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Speech recognition error", event.error);
+                stopRecordingUI();
+            };
+
+            recognition.onend = () => {
+                // Auto-stop UI if the microphone stops listening
+                if (isRecordingVoice) {
+                    stopRecordingUI();
+                }
+            };
+        }
+
+        function toggleVoiceRecord() {
+            if (!recognition) {
+                alert("Voice dictation is not supported in your browser. Please use Google Chrome or Edge.");
+                return;
+            }
+
+            if (isRecordingVoice) {
+                recognition.stop();
+                stopRecordingUI();
+            } else {
+                recognition.start();
+                startRecordingUI();
+            }
+        }
+
+        function startRecordingUI() {
+            isRecordingVoice = true;
+            const btn = document.getElementById('btnVoiceRecord');
+            const icon = document.getElementById('micIcon');
+            const text = document.getElementById('micText');
+            
+            // Apply recording styles (Red pulsing effect)
+            btn.classList.replace('bg-gray-100', 'bg-error/10');
+            btn.classList.replace('text-gray-500', 'text-error');
+            btn.classList.add('animate-pulse');
+            icon.innerText = 'mic';
+            text.innerText = 'Listening...';
+        }
+
+        function stopRecordingUI() {
+            isRecordingVoice = false;
+            const btn = document.getElementById('btnVoiceRecord');
+            const icon = document.getElementById('micIcon');
+            const text = document.getElementById('micText');
+            
+            // Revert styles
+            btn.classList.replace('bg-error/10', 'bg-gray-100');
+            btn.classList.replace('text-error', 'text-gray-500');
+            btn.classList.remove('animate-pulse');
+            icon.innerText = 'mic';
+            text.innerText = 'Dictate';
+        }
+
+        // ==========================================
+        //  ADMIN ROOMS (Add/Edit/Delete)
+        // ==========================================
+        async function loadAdminRooms() {
+            const container = document.getElementById('roomListContainer');
+            container.innerHTML = 'Loading...';
+            try {
+                const rooms = await fetchJSON('/auth/admin/rooms');
+                container.innerHTML = '';
+                rooms.forEach(r => {
+                    const div = document.createElement('div');
+                    div.className = "flex justify-between items-center p-4 bg-gray-50 rounded-xl border border-gray-100";
+                    div.innerHTML = `
+                        <span class="font-medium text-gray-700">${r.name}</span>
+                        <div class="flex gap-2">
+                            <button onclick="openEditRoomModal('${r.id}', '${r.name}')" class="text-gray-500 hover:bg-gray-200 p-2 rounded-lg"><i class="material-icons-round text-sm">edit</i></button>
+                            <button onclick="deleteRoom('${r.id}')" class="text-error hover:bg-red-50 p-2 rounded-lg"><i class="material-icons-round text-sm">delete</i></button>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        function openEditRoomModal(id, name) {
+            currentEditRoomId = id;
+            document.getElementById('editRoomNameInput').value = name;
+            openModal('roomEditModal');
+        }
+
+        async function handleUpdateRoom(e) {
+            e.preventDefault();
+            try {
+                await fetchJSON(`/auth/admin/rooms/${currentEditRoomId}`, { 
+                    method: 'PUT', 
+                    body: { name: document.getElementById('editRoomNameInput').value } 
+                });
+                closeModal('roomEditModal');
+                loadAdminRooms();
+            } catch(e) { alert('Update failed'); }
+        }
+
+        document.getElementById('addRoomForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try { await fetchJSON('/auth/admin/rooms', { method: 'POST', body: { name: document.getElementById('newRoomName').value } }); loadAdminRooms(); document.getElementById('newRoomName').value=''; } catch (e) { alert('Add failed'); }
+        });
+        async function deleteRoom(id) {
+            if(!confirm('Delete room?')) return;
+            try { await fetchJSON(`/auth/admin/rooms/${id}`, { method: 'DELETE' }); loadAdminRooms(); } catch (e) { alert('Failed'); }
+        }
+
+        // ==========================================
+        //  PDF EXPORT (UPDATED)
+        // ==========================================
+        document.getElementById('exportPdfBtn')?.addEventListener('click', async () => {
+            // 1. Check if there is data to export
+            if (currentFilteredReports.length === 0) {
+                alert("No reports to export based on current search.");
+                return;
+            }
+
+            // 2. Extract only the IDs, in the current order
+            const reportIds = currentFilteredReports.map(r => r.id);
+            const btn = document.getElementById('exportPdfBtn');
+            const originalText = btn.innerHTML;
+
+            try {
+                btn.innerHTML = `<i class="material-icons-round animate-spin text-sm">refresh</i> Generating...`;
+                btn.disabled = true;
+
+                // 3. Send POST request with IDs
+                const token = getToken();
+                const response = await fetch('/api/reports/export_pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ ids: reportIds })
+                });
+
+                if (!response.ok) throw new Error("Export failed");
+
+                // 4. Convert response to Blob and trigger download
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Facility_Report_${new Date().toISOString().split('T')[0]}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+            } catch (e) {
+                console.error(e);
+                alert('Failed to generate PDF');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+        
+        async function downloadBackup() {
+            const btn = document.getElementById('btnDownloadBackup');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i class="material-icons-round animate-spin text-sm">refresh</i> Zipping Data...`;
+            btn.disabled = true;
+
+            try {
+                const token = getToken();
+                const response = await fetch('/api/admin/backup', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error("Backup failed");
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Backup_${new Date().toISOString().split('T')[0]}.zip`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                showToast('Backup downloaded successfully', 'success');
+            } catch (e) {
+                console.error(e);
+                showToast('Failed to create backup', 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        async function handleRecovery(e) {
+            e.preventDefault();
+            
+            if(!confirm("Are you sure? This will DELETE all current data and replace it with the backup file.")) return;
+
+            const fileInput = document.getElementById('recoveryFile');
+            const btn = document.getElementById('btnStartRecovery');
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = `<i class="material-icons-round animate-spin text-sm">refresh</i> Recovering...`;
+            btn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const token = getToken();
+                const response = await fetch('/api/admin/recover', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || "Recovery failed");
+
+                showToast('System recovered! Please log in again.', 'success');
+                setTimeout(() => {
+                    setToken(null);
+                    navigateTo('login');
+                    window.location.reload();
+                }, 2000);
+
+            } catch (e) {
+                console.error(e);
+                showToast(e.message, 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                e.target.reset();
+            }
+        }
+
+        // ==========================================
+        //  INITIALIZATION
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Camera Init
+            document.getElementById('signupPhoto').addEventListener('change', handleFileSelect);
+            document.getElementById('logoutSidebarBtn').onclick = () => { setToken(null); navigateTo('login'); };
+
+            // New: Load courses immediately for signup dropdowns
+            loadCourses();
+
+            const token = getToken();
+            if (!token) navigateTo('login');
+            else navigateTo('login'); 
+        });
+    </script>
+</body>
+</html>
