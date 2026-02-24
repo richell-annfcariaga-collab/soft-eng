@@ -25,7 +25,7 @@ from flask_jwt_extended import decode_token
 from io import BytesIO 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
-genai.configure(api_key="AIzaSyDB9PeLbcvbZH_B7MbZgVcUnkzpnuwZcbg")
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 api_bp = Blueprint('api_bp', __name__)
 
@@ -519,10 +519,15 @@ def recover_system():
 #  AI & ANALYTICS EXTENSION 
 # ==========================================
 
+_nlp_model_cache = None
+
 def get_nlp_model():
     """
     Creates a 'Knowledge Base' for the computer to understand facility terms.
     """
+    global _nlp_model_cache
+    if _nlp_model_cache is not None:
+        return _nlp_model_cache
     # ENHANCED & BALANCED TRAINING DATA
     # Strategy: 
     # 1. We put "action verbs" (explode, broken, leak) in EVERY category they apply to.
@@ -585,6 +590,7 @@ def get_nlp_model():
         MultinomialNB(alpha=0.1)
     )
     model.fit(X, y)
+    _nlp_model_cache = model
     return model
 
 @api_bp.route('/analytics/ai-dashboard', methods=['GET'])
