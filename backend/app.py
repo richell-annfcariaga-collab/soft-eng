@@ -83,7 +83,7 @@ with app.app_context():
                 last_name='Administrator',
                 email='admin@example.com',
                 idno='admin',
-                password=generate_password_hash('admin123'),
+                password=generate_password_hash(os.environ.get('DEFAULT_ADMIN_PASSWORD', 'admin123')),
                 role='admin',
                 status='approved'
             )
@@ -113,6 +113,5 @@ def serve_frontend(filename):
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-if __name__ == "_main_":
+if __name__ == "__main__":
     app.run(debug=True)
-print("🔑 JWT SECRET:", app.config["JWT_SECRET_KEY"])

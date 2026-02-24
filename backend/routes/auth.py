@@ -13,12 +13,12 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 from backend.models import db, User, SignupRequest, ResetRequest, Room, Report, Course
 from datetime import datetime, timedelta
 
-# --- EMAIL CONFIGURATION (UPDATE THESE) ---
+# --- EMAIL CONFIGURATION ---
 # For Gmail, you need an "App Password" if 2FA is on.
-MAIL_SERVER = 'smtp.gmail.com'
-MAIL_PORT = 587
-MAIL_USERNAME = 'facilitydamagereportingsystemm@gmail.com'  # <--- REPLACE THIS
-MAIL_PASSWORD = 'cxbx ohca ifrm oyay'     # <--- REPLACE THIS
+MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
+MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
 MAIL_SENDER = MAIL_USERNAME
 
 # 🧠 Load DNN face detection model once (OpenCV SSD)

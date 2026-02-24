@@ -518,6 +518,186 @@
             background-image: radial-gradient(#B2CECE 1px, transparent 1px);
             background-size: 22px 22px;
         }
+
+        /* =======================================
+           MOBILE RESPONSIVE - REPORTER DASHBOARD
+           ======================================= */
+
+        @media (max-width: 767px) {
+            /* Sidebar: off-canvas slide-in on mobile */
+            #mainSidebar {
+                position: fixed !important;
+                left: -280px;
+                top: 0;
+                height: 100vh !important;
+                z-index: 999 !important;
+                transition: left 0.3s cubic-bezier(0.2, 0, 0, 1);
+                box-shadow: 4px 0 24px rgba(0, 60, 60, 0.15) !important;
+            }
+            #mainSidebar.sidebar-open {
+                left: 0 !important;
+            }
+            .sidebar-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(5, 25, 25, 0.4);
+                z-index: 998;
+                display: none;
+            }
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+            /* Header */
+            .page-header-bar {
+                padding: 0 1rem !important;
+                height: 56px !important;
+            }
+            #pageTitle { font-size: 0.9rem !important; }
+
+            /* View sections */
+            .view-section { padding: 1rem !important; }
+
+            /* Admin Dashboard stat cards: single column */
+            #view-admin-dashboard [style*="grid-template-columns:repeat(3"] {
+                grid-template-columns: 1fr !important;
+                gap: 0.75rem !important;
+            }
+            #view-admin-dashboard [style*="grid-template-columns:1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+                gap: 0.75rem !important;
+            }
+            .cluster-chart-wrap {
+                height: 280px !important;
+                min-height: 240px !important;
+            }
+            #view-admin-dashboard > div:first-child {
+                padding: 1rem 1rem 0.75rem !important;
+            }
+            #view-admin-dashboard > div:last-child {
+                padding: 1rem 1rem 2rem !important;
+            }
+
+            /* Reports view: stack vertically */
+            #view-admin-reports {
+                flex-direction: column !important;
+            }
+            #view-admin-reports > div:first-child {
+                max-width: 100% !important;
+                width: 100% !important;
+            }
+            #view-admin-reports > div:last-child {
+                height: auto !important;
+                max-height: 70vh;
+            }
+            .mat-table { min-width: 600px; }
+
+            /* Reporter submit form */
+            #view-reporter-submit .glass-card {
+                padding: 1.25rem !important;
+                border-radius: var(--radius-lg) !important;
+            }
+
+            /* Dashboard hero cards */
+            .dash-hero-card {
+                padding: 1.25rem !important;
+                border-radius: var(--radius-lg) !important;
+            }
+
+            /* Report status cards */
+            .report-status-card { padding: 1rem !important; }
+
+            /* User cards */
+            .user-card {
+                padding: 0.75rem 1rem !important;
+                flex-wrap: wrap;
+            }
+
+            /* Pending request cards */
+            .pending-req-card {
+                padding: 0.75rem 1rem !important;
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 0.75rem !important;
+            }
+
+            /* Modal */
+            .modal-box {
+                width: 95vw !important;
+                max-width: 95vw !important;
+                max-height: 90vh;
+                border-radius: var(--radius-lg) !important;
+                overflow-y: auto;
+            }
+            .modal-header { padding: 14px 16px !important; }
+
+            /* Login page: hide hero, full-width form */
+            #view-login > div:last-child { display: none !important; }
+            #view-login > div:first-child {
+                width: 100% !important;
+                padding: 1.5rem !important;
+            }
+
+            /* Signup form: single column */
+            #signupForm { grid-template-columns: 1fr !important; }
+            #signupForm [style*="grid-column:1/-1"] { grid-column: 1 !important; }
+
+            /* Stat card numbers */
+            .stat-card [style*="font-size:2.25rem"] { font-size: 1.75rem !important; }
+
+            /* Dropdown panels */
+            .dropdown-panel {
+                position: fixed !important;
+                right: 8px !important;
+                top: 60px !important;
+                width: calc(100vw - 16px) !important;
+                max-width: 360px !important;
+            }
+
+            /* Toast notifications */
+            #toast-container {
+                left: 8px !important;
+                right: 8px !important;
+                top: 8px !important;
+            }
+            .toast {
+                min-width: unset !important;
+                max-width: 100% !important;
+                width: 100% !important;
+            }
+        }
+
+        /* Tablet */
+        @media (min-width: 768px) and (max-width: 1023px) {
+            #view-admin-reports {
+                flex-direction: column !important;
+            }
+            #view-admin-reports > div:first-child {
+                max-width: 100% !important;
+                flex-direction: row !important;
+                display: flex !important;
+                gap: 1rem !important;
+            }
+        }
+
+        /* Hamburger button - hidden on desktop */
+        .mobile-menu-btn {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 99px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            color: #4A6363;
+            transition: background 0.18s;
+        }
+        .mobile-menu-btn:hover { background: #F0F7F7; color: #006A6A; }
+        @media (max-width: 767px) {
+            .mobile-menu-btn { display: inline-flex !important; }
+        }
     </style>
 </head>
 <body class="antialiased h-screen flex overflow-hidden">
@@ -1444,6 +1624,7 @@
             } else {
                 sidebar.classList.remove('hidden'); sidebar.classList.add('flex');
                 header.classList.remove('hidden'); header.classList.add('flex');
+                initMobileSidebar();
                 
                 // Routes
                 if (viewId === 'admin-dashboard') initAdminDashboard(); // Charts Only
@@ -3238,6 +3419,56 @@
             const token = getToken();
             if (!token) navigateTo('login');
             else navigateTo('login'); 
+        });
+
+        // --- MOBILE SIDEBAR TOGGLE ---
+        function initMobileSidebar() {
+            if (!document.getElementById('sidebarOverlay')) {
+                const overlay = document.createElement('div');
+                overlay.id = 'sidebarOverlay';
+                overlay.className = 'sidebar-overlay';
+                overlay.addEventListener('click', closeMobileSidebar);
+                document.body.appendChild(overlay);
+            }
+
+            const header = document.getElementById('mainHeader');
+            if (header && !document.getElementById('mobileMenuBtn')) {
+                const headerLeft = header.querySelector('.flex.items-center.gap-3');
+                if (headerLeft) {
+                    const btn = document.createElement('button');
+                    btn.id = 'mobileMenuBtn';
+                    btn.className = 'mobile-menu-btn';
+                    btn.innerHTML = '<i class="material-icons-round" style="font-size:1.3rem;">menu</i>';
+                    btn.addEventListener('click', toggleMobileSidebar);
+                    headerLeft.insertBefore(btn, headerLeft.firstChild);
+                }
+            }
+        }
+
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('mainSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (!sidebar || !overlay) return;
+            const isOpen = sidebar.classList.contains('sidebar-open');
+            if (isOpen) {
+                closeMobileSidebar();
+            } else {
+                sidebar.classList.add('sidebar-open');
+                overlay.classList.add('active');
+            }
+        }
+
+        function closeMobileSidebar() {
+            const sidebar = document.getElementById('mainSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (sidebar) sidebar.classList.remove('sidebar-open');
+            if (overlay) overlay.classList.remove('active');
+        }
+
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.nav-item') && window.innerWidth < 768) {
+                closeMobileSidebar();
+            }
         });
     </script>
 </body>
