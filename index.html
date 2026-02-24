@@ -9,8 +9,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    <meta name="description" content="Facility Reporting System for streamlined computer lab maintenance reporting and management.">
+    <meta name="theme-color" content="#006A6A">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels" defer></script>
     <script>
         tailwind.config = {
             theme: {
@@ -518,12 +520,80 @@
             background-image: radial-gradient(#B2CECE 1px, transparent 1px);
             background-size: 22px 22px;
         }
+
+        @media (max-width: 767px) {
+            #mainSidebar {
+                position: fixed !important;
+                left: 0;
+                top: 0;
+                z-index: 30 !important;
+                transform: translateX(-100%);
+                transition: transform 0.25s ease;
+            }
+            #mainSidebar.mobile-open {
+                transform: translateX(0);
+            }
+            .page-header-bar {
+                padding: 0 1rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .page-header-bar {
+                height: 56px;
+                padding: 0 0.75rem;
+            }
+            #pageTitle {
+                font-size: 0.9rem !important;
+            }
+            .toast {
+                min-width: 240px;
+                max-width: calc(100vw - 40px);
+            }
+            #toast-container {
+                right: 10px;
+                left: 10px;
+                top: 10px;
+            }
+            #view-reporter-dashboard .reporter-hero-icon {
+                width: 52px !important;
+                height: 52px !important;
+            }
+            #view-reporter-dashboard .reporter-hero-icon i {
+                font-size: 1.6rem !important;
+            }
+            #view-reporter-dashboard h1 {
+                font-size: 1.5rem !important;
+            }
+            #view-reporter-dashboard .reporter-actions-grid {
+                grid-template-columns: 1fr !important;
+            }
+            #view-reporter-dashboard .reporter-action-card {
+                padding: 1.5rem 1rem !important;
+            }
+            #view-report-submit .glass-card {
+                padding: 1.25rem !important;
+                border-radius: var(--radius-lg) !important;
+            }
+            #view-report-submit {
+                padding: 1rem !important;
+            }
+            #view-report-status {
+                padding: 1rem !important;
+            }
+            #myReportsContainer {
+                grid-template-columns: 1fr !important;
+                gap: 0.75rem !important;
+            }
+        }
     </style>
 </head>
 <body class="antialiased h-screen flex overflow-hidden">
+<noscript>Please enable JavaScript to use the Facility Reporting System.</noscript>
 
 <div id="toast-container"></div>
 
+<div id="sidebarOverlay" class="fixed inset-0 bg-black/40 z-15 hidden" onclick="toggleMobileSidebar()" onkeydown="if(event.key==='Enter'||event.key===' ')toggleMobileSidebar()" tabindex="0" role="button" aria-label="Close navigation menu"></div>
 <aside id="mainSidebar" class="hidden w-64 bg-white h-full border-r border-gray-100 flex-col z-20 shrink-0" style="box-shadow: 2px 0 20px rgba(0,60,60,.06);">
     <div class="sidebar-logo-wrap border-b border-gray-50">
         <div class="sidebar-logo-icon"><i class="material-icons-round" style="font-size:1.3rem;">dns</i></div>
@@ -534,7 +604,7 @@
     </div>
     <div style="padding: .75rem .875rem; flex:1; overflow-y:auto;">
         <div id="sidebarRoleLabel" style="font-size:.65rem;font-weight:800;color:#A0BABA;text-transform:uppercase;letter-spacing:.1em;padding:4px 6px 8px;margin-bottom:4px;">Navigation</div>
-        <nav id="sidebarNav" class="flex flex-col gap-1"></nav>
+        <nav id="sidebarNav" class="flex flex-col gap-1" role="navigation" aria-label="Main navigation"></nav>
     </div>
     <div style="padding:.875rem; border-top:1px solid #F0F5F5;">
         <button id="logoutSidebarBtn" class="nav-item" style="color:#9B3333;">
@@ -548,13 +618,16 @@
 
     <header id="mainHeader" class="hidden page-header-bar">
         <div class="flex items-center gap-3">
+            <button id="mobileMenuBtn" class="header-icon-btn md:hidden" aria-label="Open menu" onclick="toggleMobileSidebar()">
+                <i class="material-icons-round" aria-hidden="true">menu</i>
+            </button>
             <h2 id="pageTitle" style="font-size:1.05rem;font-weight:700;color:#0D1F1F;">Dashboard</h2>
         </div>
         <div class="flex items-center gap-2">
 
             <div id="bellWrap" class="relative group hidden">
-                <button class="header-icon-btn">
-                    <i class="material-icons-round" style="font-size:1.2rem;">notifications_none</i>
+                <button class="header-icon-btn" aria-label="Notifications">
+                    <i class="material-icons-round" style="font-size:1.2rem;" aria-hidden="true">notifications_none</i>
                     <span id="bellDot" class="notification-dot hidden"></span>
                 </button>
                 <div id="bellMenu" class="dropdown-panel">
@@ -564,8 +637,8 @@
             </div>
 
             <div id="lockWrap" class="relative group hidden">
-                <button class="header-icon-btn">
-                    <i class="material-icons-round" style="font-size:1.2rem;">admin_panel_settings</i>
+                <button class="header-icon-btn" aria-label="Pending requests">
+                    <i class="material-icons-round" style="font-size:1.2rem;" aria-hidden="true">admin_panel_settings</i>
                     <span id="lockDot" class="notification-dot hidden" style="background:#B36A00;"></span>
                 </button>
                 <div id="lockMenu" class="dropdown-panel wide">
@@ -612,11 +685,11 @@
                     <form id="loginForm" onsubmit="handleLogin(event)">
                         <div class="mat-input-group">
                             <input type="text" id="loginIdno" name="idno" class="mat-input" placeholder=" " required>
-                            <label class="mat-label">ID Number</label>
+                            <label class="mat-label" for="loginIdno">ID Number</label>
                         </div>
                         <div class="mat-input-group">
                             <input type="password" id="loginPassword" name="password" class="mat-input" placeholder=" " required>
-                            <label class="mat-label">Password</label>
+                            <label class="mat-label" for="loginPassword">Password</label>
                         </div>
                         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
                             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;">
@@ -696,17 +769,17 @@
                         <h3 style="font-size:1rem;font-weight:800;color:#fff;margin-bottom:1rem;">Meet the Developers</h3>
                         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.875rem;">
                             <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius-lg);padding:1.25rem;text-align:center;">
-                                <img src="https://ui-avatars.com/api/?name=Brave+Garay&background=006A6A&color=fff&size=80" style="width:56px;height:56px;border-radius:99px;margin:0 auto .75rem;border:2px solid rgba(255,255,255,.25);">
+                                <img src="https://ui-avatars.com/api/?name=Brave+Garay&background=006A6A&color=fff&size=80" alt="Brave Jerome D. Garay" style="width:56px;height:56px;border-radius:99px;margin:0 auto .75rem;border:2px solid rgba(255,255,255,.25);">
                                 <div style="font-weight:700;color:#fff;font-size:.8rem;line-height:1.3;">Brave Jerome D. Garay</div>
                                 <div style="font-size:.68rem;color:#7DDFCF;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-top:.25rem;">Lead Developer</div>
                             </div>
                             <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius-lg);padding:1.25rem;text-align:center;">
-                                <img src="https://ui-avatars.com/api/?name=Richell+Cariaga&background=EA9C10&color=fff&size=80" style="width:56px;height:56px;border-radius:99px;margin:0 auto .75rem;border:2px solid rgba(255,255,255,.25);">
+                                <img src="https://ui-avatars.com/api/?name=Richell+Cariaga&background=EA9C10&color=fff&size=80" alt="Richell-Ann F. Cariaga" style="width:56px;height:56px;border-radius:99px;margin:0 auto .75rem;border:2px solid rgba(255,255,255,.25);">
                                 <div style="font-weight:700;color:#fff;font-size:.8rem;line-height:1.3;">Richell-Ann F. Cariaga</div>
                                 <div style="font-size:.68rem;color:#FFD580;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-top:.25rem;">Designer</div>
                             </div>
                             <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius-lg);padding:1.25rem;text-align:center;">
-                                <img src="https://ui-avatars.com/api/?name=Ardel+Mangadap&background=006D31&color=fff&size=80" style="width:56px;height:56px;border-radius:99px;margin:0 auto .75rem;border:2px solid rgba(255,255,255,.25);">
+                                <img src="https://ui-avatars.com/api/?name=Ardel+Mangadap&background=006D31&color=fff&size=80" alt="Ardel John Mangadap" style="width:56px;height:56px;border-radius:99px;margin:0 auto .75rem;border:2px solid rgba(255,255,255,.25);">
                                 <div style="font-weight:700;color:#fff;font-size:.8rem;line-height:1.3;">Ardel John Mangadap</div>
                                 <div style="font-size:.68rem;color:#90EE90;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-top:.25rem;">Tester</div>
                             </div>
@@ -738,7 +811,7 @@
 
                     <div style="grid-column:1/-1;display:flex;flex-direction:column;align-items:center;gap:.875rem;margin-bottom:1.5rem;padding:1.5rem;background:#F7FBFB;border-radius:var(--radius-lg);border:1.5px dashed #C8D8D8;">
                         <div style="position:relative;width:96px;height:96px;border-radius:50%;background:#E8F0F0;overflow:hidden;display:flex;align-items:center;justify-content:center;border:3px solid #fff;box-shadow:0 4px 12px rgba(0,60,60,.12);">
-                            <img id="photoPreview" style="width:100%;height:100%;object-fit:cover;display:none;">
+                            <img id="photoPreview" alt="Profile photo preview" style="width:100%;height:100%;object-fit:cover;display:none;">
                             <video id="cameraPreview" style="width:100%;height:100%;object-fit:cover;display:none;" autoplay playsinline></video>
                             <canvas id="cameraCanvas" style="display:none;"></canvas>
                             <i class="material-icons-round" id="photoPlaceholder" style="font-size:2.5rem;color:#A0BABA;">person</i>
@@ -754,20 +827,20 @@
                     </div>
 
                     <div class="mat-input-group">
-                        <input type="text" name="first_name" class="mat-input" placeholder=" " required>
-                        <label class="mat-label">First Name</label>
+                        <input type="text" id="signupFirstName" name="first_name" class="mat-input" placeholder=" " required>
+                        <label class="mat-label" for="signupFirstName">First Name</label>
                     </div>
                     <div class="mat-input-group">
-                        <input type="text" name="last_name" class="mat-input" placeholder=" " required>
-                        <label class="mat-label">Last Name</label>
+                        <input type="text" id="signupLastName" name="last_name" class="mat-input" placeholder=" " required>
+                        <label class="mat-label" for="signupLastName">Last Name</label>
                     </div>
                     <div class="mat-input-group" style="grid-column:1/-1;">
-                        <input type="email" name="email" class="mat-input" placeholder=" " required>
-                        <label class="mat-label">Email Address (@isu.edu.ph)</label>
+                        <input type="email" id="signupEmail" name="email" class="mat-input" placeholder=" " required>
+                        <label class="mat-label" for="signupEmail">Email Address (@isu.edu.ph)</label>
                     </div>
                     <div class="mat-input-group">
-                        <input type="text" name="idno" class="mat-input" placeholder=" " required>
-                        <label class="mat-label">ID Number</label>
+                        <input type="text" id="signupIdno" name="idno" class="mat-input" placeholder=" " required>
+                        <label class="mat-label" for="signupIdno">ID Number</label>
                     </div>
                     <div class="mat-input-group">
                         <select name="course" id="signupCourse" class="mat-input mat-select" required>
@@ -776,8 +849,8 @@
                         <label class="mat-label">Course / Major</label>
                     </div>
                     <div class="mat-input-group" style="grid-column:1/-1;">
-                        <input type="text" name="cp" class="mat-input" placeholder=" ">
-                        <label class="mat-label">Contact Number</label>
+                        <input type="text" id="signupCp" name="cp" class="mat-input" placeholder=" ">
+                        <label class="mat-label" for="signupCp">Contact Number</label>
                     </div>
                     <div style="grid-column:1/-1;">
                         <div class="mat-input-group" style="margin-bottom:0;">
@@ -795,8 +868,8 @@
                         </div>
                     </div>
                     <div class="mat-input-group" style="grid-column:1/-1;">
-                        <input type="password" name="confirmPassword" class="mat-input" placeholder=" " required>
-                        <label class="mat-label">Confirm Password</label>
+                        <input type="password" id="signupConfirmPass" name="confirmPassword" class="mat-input" placeholder=" " required>
+                        <label class="mat-label" for="signupConfirmPass">Confirm Password</label>
                     </div>
                     <div id="signupFeedback" style="grid-column:1/-1;text-align:center;font-size:.85rem;margin-bottom:.5rem;display:none;"></div>
                     <div style="grid-column:1/-1;margin-top:.5rem;">
@@ -815,12 +888,12 @@
                 <p style="font-size:.85rem;color:#6B8E8E;margin-bottom:1.75rem;">Enter your details to request a password reset.</p>
                 <form id="forgotForm" onsubmit="handleForgot(event)">
                     <div class="mat-input-group">
-                        <input name="idno" class="mat-input" placeholder=" " required>
-                        <label class="mat-label">ID Number</label>
+                        <input id="forgotIdno" name="idno" class="mat-input" placeholder=" " required>
+                        <label class="mat-label" for="forgotIdno">ID Number</label>
                     </div>
                     <div class="mat-input-group">
-                        <input type="password" name="newPassword" class="mat-input" placeholder=" " required oninput="checkPasswordStrength(this.value, 'f-')">
-                        <label class="mat-label">New Password</label>
+                        <input type="password" id="forgotNewPass" name="newPassword" class="mat-input" placeholder=" " required oninput="checkPasswordStrength(this.value, 'f-')">
+                        <label class="mat-label" for="forgotNewPass">New Password</label>
                         <div style="margin-top:8px;height:3px;background:#E8F0F0;border-radius:99px;overflow:hidden;">
                             <div id="f-strengthBar" style="width:0%;height:100%;border-radius:99px;transition:all .35s;"></div>
                         </div>
@@ -832,8 +905,8 @@
                         </div>
                     </div>
                     <div class="mat-input-group">
-                        <input type="password" name="confirmPassword" class="mat-input" placeholder=" " required>
-                        <label class="mat-label">Confirm New Password</label>
+                        <input type="password" id="forgotConfirmPass" name="confirmPassword" class="mat-input" placeholder=" " required>
+                        <label class="mat-label" for="forgotConfirmPass">Confirm New Password</label>
                     </div>
                     <div id="forgotFeedback" style="display:none;margin-bottom:1rem;font-size:.85rem;text-align:center;font-weight:600;"></div>
                     <button type="submit" class="btn-primary" style="width:100%;padding:14px;font-size:.975rem;border-radius:var(--radius-sm);">Submit Request</button>
@@ -1018,12 +1091,12 @@
                 <div style="padding:12px 20px;border-top:1px solid #F0F5F5;display:flex;align-items:center;justify-content:space-between;background:#FAFEFE;border-radius:0 0 var(--radius-xl) var(--radius-xl);">
                     <span id="paginationInfo" style="font-size:.75rem;font-weight:600;color:#7AABAB;">Showing 0-0 of 0</span>
                     <div style="display:flex;align-items:center;gap:6px;">
-                        <button onclick="changePage(-1)" id="btnPrev" style="width:30px;height:30px;border-radius:var(--radius-sm);border:1.5px solid #E0EEEE;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#4A6363;transition:all .18s;" onmouseover="this.style.background='#F0F7F7'" onmouseout="this.style.background='#fff'">
-                            <i class="material-icons-round" style="font-size:1rem;">chevron_left</i>
+                        <button onclick="changePage(-1)" id="btnPrev" aria-label="Previous page" style="width:30px;height:30px;border-radius:var(--radius-sm);border:1.5px solid #E0EEEE;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#4A6363;transition:all .18s;" onmouseover="this.style.background='#F0F7F7'" onmouseout="this.style.background='#fff'">
+                            <i class="material-icons-round" style="font-size:1rem;" aria-hidden="true">chevron_left</i>
                         </button>
                         <span id="pageIndicator" style="font-size:.75rem;font-weight:800;color:#006A6A;background:#E0F2F1;padding:4px 10px;border-radius:6px;">1</span>
-                        <button onclick="changePage(1)" id="btnNext" style="width:30px;height:30px;border-radius:var(--radius-sm);border:1.5px solid #E0EEEE;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#4A6363;transition:all .18s;" onmouseover="this.style.background='#F0F7F7'" onmouseout="this.style.background='#fff'">
-                            <i class="material-icons-round" style="font-size:1rem;">chevron_right</i>
+                        <button onclick="changePage(1)" id="btnNext" aria-label="Next page" style="width:30px;height:30px;border-radius:var(--radius-sm);border:1.5px solid #E0EEEE;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#4A6363;transition:all .18s;" onmouseover="this.style.background='#F0F7F7'" onmouseout="this.style.background='#fff'">
+                            <i class="material-icons-round" style="font-size:1rem;" aria-hidden="true">chevron_right</i>
                         </button>
                     </div>
                 </div>
@@ -1122,19 +1195,19 @@
 
         <section id="view-reporter-dashboard" class="view-section flex-col gap-8 items-center justify-center min-h-[80vh]">
             <div style="text-align:center;max-width:520px;">
-                <div style="width:64px;height:64px;border-radius:var(--radius-lg);background:linear-gradient(135deg,#006A6A,#004D4D);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;box-shadow:0 8px 24px rgba(0,106,106,.35);">
-                    <i class="material-icons-round" style="color:#fff;font-size:2rem;">home_repair_service</i>
+                <div style="width:64px;height:64px;border-radius:var(--radius-lg);background:linear-gradient(135deg,#006A6A,#004D4D);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;box-shadow:0 8px 24px rgba(0,106,106,.35);" class="reporter-hero-icon">
+                    <i class="material-icons-round" style="color:#fff;font-size:2rem;" aria-hidden="true">home_repair_service</i>
                 </div>
                 <h1 style="font-size:2rem;font-weight:800;color:#0D1F1F;margin-bottom:.5rem;">Hello, Reporter!</h1>
                 <p style="color:#7AABAB;font-size:.95rem;font-weight:500;margin-bottom:2.5rem;">What would you like to do today?</p>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;width:100%;">
-                    <button onclick="navigateTo('report-submit')" style="background:#fff;border:1px solid #E8F0F0;border-radius:var(--radius-xl);padding:2rem 1.5rem;text-align:left;cursor:pointer;box-shadow:var(--shadow-sm);transition:all .25s;position:relative;overflow:hidden;" onmouseover="this.style.boxShadow='var(--shadow-lg)';this.style.transform='translateY(-3px)';this.style.borderColor='rgba(0,106,106,.3)'" onmouseout="this.style.boxShadow='var(--shadow-sm)';this.style.transform='none';this.style.borderColor='#E8F0F0'">
-                        <div style="width:48px;height:48px;border-radius:var(--radius-md);background:linear-gradient(135deg,#E0F2F1,#B2DFDB);display:flex;align-items:center;justify-content:center;margin-bottom:1rem;"><i class="material-icons-round" style="color:#006A6A;font-size:1.4rem;">add_circle</i></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;width:100%;" class="reporter-actions-grid">
+                    <button onclick="navigateTo('report-submit')" class="reporter-action-card" style="background:#fff;border:1px solid #E8F0F0;border-radius:var(--radius-xl);padding:2rem 1.5rem;text-align:left;cursor:pointer;box-shadow:var(--shadow-sm);transition:all .25s;position:relative;overflow:hidden;" onmouseover="this.style.boxShadow='var(--shadow-lg)';this.style.transform='translateY(-3px)';this.style.borderColor='rgba(0,106,106,.3)'" onmouseout="this.style.boxShadow='var(--shadow-sm)';this.style.transform='none';this.style.borderColor='#E8F0F0'">
+                        <div style="width:48px;height:48px;border-radius:var(--radius-md);background:linear-gradient(135deg,#E0F2F1,#B2DFDB);display:flex;align-items:center;justify-content:center;margin-bottom:1rem;"><i class="material-icons-round" style="color:#006A6A;font-size:1.4rem;" aria-hidden="true">add_circle</i></div>
                         <div style="font-size:1rem;font-weight:800;color:#0D1F1F;margin-bottom:.35rem;">Submit Report</div>
                         <div style="font-size:.8rem;color:#7AABAB;line-height:1.5;">Report a damaged item, electrical issue, or facility problem.</div>
                     </button>
-                    <button onclick="navigateTo('report-status')" style="background:#fff;border:1px solid #E8F0F0;border-radius:var(--radius-xl);padding:2rem 1.5rem;text-align:left;cursor:pointer;box-shadow:var(--shadow-sm);transition:all .25s;position:relative;overflow:hidden;" onmouseover="this.style.boxShadow='var(--shadow-lg)';this.style.transform='translateY(-3px)';this.style.borderColor='rgba(74,99,99,.3)'" onmouseout="this.style.boxShadow='var(--shadow-sm)';this.style.transform='none';this.style.borderColor='#E8F0F0'">
-                        <div style="width:48px;height:48px;border-radius:var(--radius-md);background:#F0F4F4;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;"><i class="material-icons-round" style="color:#4A6363;font-size:1.4rem;">history</i></div>
+                    <button onclick="navigateTo('report-status')" class="reporter-action-card" style="background:#fff;border:1px solid #E8F0F0;border-radius:var(--radius-xl);padding:2rem 1.5rem;text-align:left;cursor:pointer;box-shadow:var(--shadow-sm);transition:all .25s;position:relative;overflow:hidden;" onmouseover="this.style.boxShadow='var(--shadow-lg)';this.style.transform='translateY(-3px)';this.style.borderColor='rgba(74,99,99,.3)'" onmouseout="this.style.boxShadow='var(--shadow-sm)';this.style.transform='none';this.style.borderColor='#E8F0F0'">
+                        <div style="width:48px;height:48px;border-radius:var(--radius-md);background:#F0F4F4;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;"><i class="material-icons-round" style="color:#4A6363;font-size:1.4rem;" aria-hidden="true">history</i></div>
                         <div style="font-size:1rem;font-weight:800;color:#0D1F1F;margin-bottom:.35rem;">My Reports</div>
                         <div style="font-size:.8rem;color:#7AABAB;line-height:1.5;">Track the status of your submitted reports.</div>
                     </button>
@@ -1145,7 +1218,7 @@
         <section id="view-report-submit" class="view-section flex-col items-center justify-center py-10">
             <div class="glass-card" style="border-radius:var(--radius-xl);padding:2rem;width:100%;max-width:520px;">
                 <div style="display:flex;align-items:center;gap:.875rem;margin-bottom:1.75rem;">
-                    <button onclick="navigateTo('reporter-dashboard')" class="header-icon-btn" style="background:#F0F5F5;"><i class="material-icons-round" style="font-size:1.1rem;">arrow_back</i></button>
+                    <button onclick="navigateTo('reporter-dashboard')" class="header-icon-btn" aria-label="Go back" style="background:#F0F5F5;"><i class="material-icons-round" style="font-size:1.1rem;" aria-hidden="true">arrow_back</i></button>
                     <div>
                         <h2 style="font-size:1.3rem;font-weight:800;color:#0D1F1F;">New Report</h2>
                         <p style="font-size:.78rem;color:#7AABAB;margin-top:1px;">Describe the issue clearly for faster resolution.</p>
@@ -1154,7 +1227,7 @@
 
                 <div style="display:flex;flex-direction:column;align-items:center;gap:.875rem;margin-bottom:1.5rem;padding:1.25rem;background:#F7FBFB;border-radius:var(--radius-lg);border:1.5px dashed #C8D8D8;">
                     <div style="position:relative;width:100%;height:180px;background:#E8F0F0;border-radius:var(--radius-md);overflow:hidden;display:flex;align-items:center;justify-content:center;">
-                        <img id="reportPhotoPreview" style="width:100%;height:100%;object-fit:contain;display:none;">
+                        <img id="reportPhotoPreview" alt="Report photo preview" style="width:100%;height:100%;object-fit:contain;display:none;">
                         <video id="reportCameraPreview" style="width:100%;height:100%;object-fit:cover;display:none;" autoplay playsinline></video>
                         <canvas id="reportCameraCanvas" style="display:none;"></canvas>
                         <div id="reportPhotoPlaceholder" style="display:flex;flex-direction:column;align-items:center;color:#A0BABA;">
@@ -1197,16 +1270,15 @@
 
         <section id="view-report-status" class="view-section flex-col gap-5">
             <div style="display:flex;align-items:center;gap:.875rem;">
-                <button onclick="navigateTo('reporter-dashboard')" class="header-icon-btn" style="background:#F0F5F5;"><i class="material-icons-round" style="font-size:1.1rem;">arrow_back</i></button>
+                <button onclick="navigateTo('reporter-dashboard')" class="header-icon-btn" aria-label="Go back" style="background:#F0F5F5;"><i class="material-icons-round" style="font-size:1.1rem;" aria-hidden="true">arrow_back</i></button>
                 <div>
                     <h2 style="font-size:1.3rem;font-weight:800;color:#0D1F1F;">My Reports</h2>
                     <p style="font-size:.78rem;color:#7AABAB;margin-top:1px;">Track all your submitted reports.</p>
                 </div>
             </div>
-            <div id="myReportsContainer" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;"></div>
+            <div id="myReportsContainer" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;"></div>
         </section>
 
-        <br><br>
     </div>
 </main>
 
@@ -1214,7 +1286,7 @@
     <div class="modal-box" style="max-width:400px;">
         <div class="modal-header">
             <h3>Verify Email</h3>
-            <button class="modal-close-btn" onclick="closeModal('otpModal')"><i class="material-icons-round" style="font-size:1.1rem;">close</i></button>
+            <button class="modal-close-btn" aria-label="Close dialog" onclick="closeModal('otpModal')"><i class="material-icons-round" style="font-size:1.1rem;" aria-hidden="true">close</i></button>
         </div>
         <div style="padding:2rem;text-align:center;">
             <div style="width:60px;height:60px;border-radius:99px;background:#E0F2F1;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
@@ -1268,11 +1340,11 @@
             <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden animate-[fadeUp_0.2s_ease-out]">
                 <div class="bg-primary p-4 flex justify-between items-center text-white">
                     <h3 class="font-bold text-lg">Request Details</h3>
-                    <button onclick="closeModal('requestModal')" class="hover:bg-white/20 rounded-full p-1"><i class="material-icons-round">close</i></button>
+                    <button onclick="closeModal('requestModal')" aria-label="Close dialog" class="hover:bg-white/20 rounded-full p-1"><i class="material-icons-round" aria-hidden="true">close</i></button>
                 </div>
                 <div class="p-6 flex flex-col items-center gap-4">
                     <div class="w-32 h-32 bg-gray-100 rounded-full overflow-hidden border-4 border-white shadow-md">
-                        <img id="reqPhoto" src="" class="w-full h-full object-cover" onerror="this.src='https://ui-avatars.com/api/?name=User&background=random'">
+                        <img id="reqPhoto" src="" alt="User photo" class="w-full h-full object-cover" onerror="this.src='https://ui-avatars.com/api/?name=User&background=random'">
                     </div>
                     <div class="text-center">
                         <h2 id="reqName" class="text-2xl font-bold text-gray-800">User Name</h2>
@@ -1296,7 +1368,7 @@
             <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden animate-[fadeUp_0.2s_ease-out]">
                 <div class="bg-primary p-4 flex justify-between items-center text-white">
                     <h3 class="font-bold text-lg">Edit User</h3>
-                    <button onclick="closeModal('userEditModal')" class="hover:bg-white/20 rounded-full p-1"><i class="material-icons-round">close</i></button>
+                    <button onclick="closeModal('userEditModal')" aria-label="Close dialog" class="hover:bg-white/20 rounded-full p-1"><i class="material-icons-round" aria-hidden="true">close</i></button>
                 </div>
                 <div class="p-6">
                     <form id="editUserForm" onsubmit="handleUpdateUser(event)" class="flex flex-col gap-4">
@@ -1341,7 +1413,7 @@
             <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-[fadeUp_0.2s_ease-out]">
                 <div class="bg-primary p-4 flex justify-between items-center text-white">
                     <h3 class="font-bold text-lg">Edit Report</h3>
-                    <button onclick="closeModal('reportEditModal')" class="hover:bg-white/20 rounded-full p-1"><i class="material-icons-round">close</i></button>
+                    <button onclick="closeModal('reportEditModal')" aria-label="Close dialog" class="hover:bg-white/20 rounded-full p-1"><i class="material-icons-round" aria-hidden="true">close</i></button>
                 </div>
                 <div class="p-6">
                     <form id="editReportForm" onsubmit="handleEditReportSubmit(event)" class="flex flex-col gap-4">
@@ -1364,7 +1436,7 @@
             <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden animate-[fadeUp_0.2s_ease-out]">
                 <div class="bg-primary p-4 flex justify-between items-center text-white">
                     <h3 class="font-bold text-lg">Edit Room</h3>
-                    <button onclick="closeModal('roomEditModal')" class="hover:bg-white/20 rounded-full p-1"><i class="material-icons-round">close</i></button>
+                    <button onclick="closeModal('roomEditModal')" aria-label="Close dialog" class="hover:bg-white/20 rounded-full p-1"><i class="material-icons-round" aria-hidden="true">close</i></button>
                 </div>
                 <div class="p-6">
                     <form id="editRoomForm" onsubmit="handleUpdateRoom(event)" class="flex flex-col gap-4">
@@ -1382,7 +1454,7 @@
             <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-[fadeUp_0.2s_ease-out]">
                 <div class="bg-primary p-4 flex justify-between items-center text-white">
                     <h3 class="font-bold text-lg">Edit Course</h3>
-                    <button onclick="closeModal('courseEditModal')" class="hover:bg-white/20 rounded-full p-1"><i class="material-icons-round">close</i></button>
+                    <button onclick="closeModal('courseEditModal')" aria-label="Close dialog" class="hover:bg-white/20 rounded-full p-1"><i class="material-icons-round" aria-hidden="true">close</i></button>
                 </div>
                 <div class="p-6">
                     <form id="editCourseForm" onsubmit="handleUpdateCourse(event)" class="flex flex-col gap-4">
@@ -1406,7 +1478,7 @@
                             <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Powered by Gemini 3.0</p>
                         </div>
                     </div>
-                    <button onclick="closeModal('aiAnalysisModal')" class="hover:bg-white/10 rounded-full p-2 transition"><i class="material-icons-round">close</i></button>
+                    <button onclick="closeModal('aiAnalysisModal')" aria-label="Close dialog" class="hover:bg-white/10 rounded-full p-2 transition"><i class="material-icons-round" aria-hidden="true">close</i></button>
                 </div>
 
                 <div class="p-8 overflow-y-auto flex-1 bg-surface-50" id="aiModalContent">
@@ -1457,6 +1529,26 @@
             }
             if (viewId === 'signup') loadCourses();
             document.getElementById('contentScroll').scrollTop = 0;
+            // Close mobile sidebar after navigation
+            if (window.innerWidth < 768) {
+                const sidebar = document.getElementById('mainSidebar');
+                const overlay = document.getElementById('sidebarOverlay');
+                if (sidebar) sidebar.classList.remove('mobile-open');
+                if (overlay) overlay.classList.add('hidden');
+            }
+        }
+
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('mainSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const isOpen = sidebar.classList.contains('mobile-open');
+            if (isOpen) {
+                sidebar.classList.remove('mobile-open');
+                overlay.classList.add('hidden');
+            } else {
+                sidebar.classList.add('mobile-open');
+                overlay.classList.remove('hidden');
+            }
         }
 
         // ==========================================
